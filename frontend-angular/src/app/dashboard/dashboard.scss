@@ -1,0 +1,46 @@
+/* src/app/dashboard/dashboard.scss   */
+
+.header-bar {
+  background-color: #FDFD96; // El amarillo de tu prototipo
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-weight: bold;
+    color: #333;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  // Se ajustará a 2 columnas si cabe, si no, 1
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.chart-container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    margin-top: 0;
+    color: #555;
+  }
+}
+
+.alert-bar {
+  background-color: #fca964; // El naranja de tu prototipo
+  color: #542d00;
+  font-weight: bold;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 24px;
+}
