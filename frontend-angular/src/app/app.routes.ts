@@ -2,22 +2,20 @@
 
 import { Routes } from '@angular/router';
 import { Dashboard } from './dashboard/dashboard';
+import { Produccion } from './pages/produccion/produccion'; //agregamos el componente inventarion 
 
 export const routes: Routes = [
-    
-    // --- 2. Añade estas dos rutas ---
-    
-    // Si la ruta está vacía (ej. localhost:4200), redirige a /dashboard
     { 
         path: '', 
         redirectTo: 'dashboard', 
         pathMatch: 'full' 
     },
-    
-    // Cuando la ruta sea /dashboard, carga el Dashboard
     { 
         path: 'dashboard', 
         component: Dashboard 
+    },
+    {
+        path: 'produccion', component: Produccion
     },
 
 ];
