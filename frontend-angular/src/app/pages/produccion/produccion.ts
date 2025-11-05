@@ -1,16 +1,17 @@
-import { Component } from '@angular/core';
+import { Component} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Receta } from '../../models/receta.interface';
-import { InsumoFormulario } from '../../models/insumo-formulario.interface'; 
+import { InsumoFormulario } from '../../models/insumo-formulario.interface';
+import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal'; //importamos el nuevo modal para nuevas recetas 
 
 @Component({
   selector: 'app-produccion',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NuevaRecetaModal],
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
 })
-export class Produccion {
+export class Produccion{
   // --- 3. Datos de prueba para el RECETARIO ---
   listaRecetas: Receta[] = [
     { id: '1', nombre: 'Queso Fresco', rendimiento: '18-20 Kg' },
@@ -43,4 +44,18 @@ export class Produccion {
       status: 'out' // Rojo
     },
   ];
+
+  isModalOpen = false;
+  recetaSeleccionada: Receta | null = null;
+  seleccionarReceta(receta: Receta): void {
+    this.recetaSeleccionada = receta;
+  }
+  
+  abrirModalNuevaReceta(): void {
+    this.isModalOpen = true;
+  }
+
+  cerrarModalNuevaReceta(): void {
+    this.isModalOpen = false;
+  }
 }

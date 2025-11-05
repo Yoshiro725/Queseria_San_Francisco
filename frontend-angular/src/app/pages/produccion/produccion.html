@@ -4,7 +4,9 @@
 
     <div class="bg-yellow-300 p-4 flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-800">RECETARIO</h2>
-      <button class="text-sm font-semibold text-gray-700 hover:text-black">
+      <button 
+        (click)="abrirModalNuevaReceta()" 
+        class="text-sm font-semibold text-gray-700 hover:text-black">
         + Nueva Receta
       </button>
     </div>
@@ -19,7 +21,9 @@
           <div class="text-sm text-gray-600">Rendimiento: {{ receta.rendimiento }}</div>
         </div>
 
-        <button class="bg-green-400 text-white font-bold py-2 px-6 rounded-full shadow hover:bg-green-500">
+        <button 
+          (click)="seleccionarReceta(receta)"
+          class="bg-green-400 text-white font-bold py-2 px-6 rounded-full shadow hover:bg-green-500">
           Iniciar Producción
         </button>
       </div>
@@ -33,7 +37,10 @@
     </div>
 
     <div class="p-6">
-      <h3 class="text-lg font-semibold text-gray-700 mb-4">Nueva Producción</h3>
+      
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">
+        Nueva Producción: {{ recetaSeleccionada ? recetaSeleccionada.nombre : '--------' }}
+      </h3>
       
       <div class="grid grid-cols-3 gap-4 mb-2 p-3 bg-yellow-200 rounded-lg font-bold text-gray-700">
         <div class="text-center">Insumo</div>
@@ -42,8 +49,11 @@
       </div>
 
       <div class="space-y-3">
+        
         <div *ngFor="let insumo of insumosFormulario" class="grid grid-cols-3 gap-4 text-center font-semibold">
+          
           <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.nombre }}</span>
+          
           <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.cantidad }}</span>
           
           <span class="rounded-full py-2 px-4"
@@ -65,5 +75,8 @@
       </div>
     </div>
   </div>
-
 </div>
+<app-nueva-receta-modal 
+  *ngIf="isModalOpen" 
+  (cerrar)="cerrarModalNuevaReceta()">
+</app-nueva-receta-modal>
