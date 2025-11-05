@@ -13,8 +13,11 @@
   
   </div>
 </div>
+<h3 class="text-lg font-semibold text-gray-700 text-center mt-6 mb-3">
+  ¡Presta Atención! Insumos y Productos por Agotarse
+</h3>
 
+<div class="flex flex-col space-y-3 mt-6"> 
+  <app-alert-bar *ngFor="let item of lowStockAlerts" [message]="item"></app-alert-bar>
 
-<div class="alert-bar">
-  <span>Queso Fresco Bajo Stock (-- Kg Disponibles)</span>
 </div>
