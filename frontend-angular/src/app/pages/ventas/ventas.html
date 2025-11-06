@@ -1,1 +1,75 @@
-<p>ventas works!</p>
+<div class="flex flex-col space-y-6">
+
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    
+    <div class="bg-yellow-300 p-4">
+      <h2 class="text-2xl font-bold text-gray-800 text-center">Ventas</h2>
+    </div>
+
+    <div class="p-4 flex justify-center space-x-2 bg-gray-50">
+      
+      <button 
+        (click)="seleccionarTab('dia')"
+        [class.bg-yellow-400]="activeTab === 'dia'"
+        [class.bg-gray-200]="activeTab !== 'dia'"
+        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
+        Día
+      </button>
+      <button 
+        (click)="seleccionarTab('semana')"
+        [class.bg-yellow-400]="activeTab === 'semana'"
+        [class.bg-gray-200]="activeTab !== 'semana'"
+        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
+        Semana
+      </button>
+      <button 
+        (click)="seleccionarTab('mes')"
+        [class.bg-yellow-400]="activeTab === 'mes'"
+        [class.bg-gray-200]="activeTab !== 'mes'"
+        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
+        Mes
+      </button>
+      <button 
+        (click)="seleccionarTab('año')"
+        [class.bg-yellow-400]="activeTab === 'año'"
+        [class.bg-gray-200]="activeTab !== 'año'"
+        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
+        Año
+      </button>
+    </div>
+
+    <div class="p-6 h-64">
+      <div class="text-center text-gray-500">
+        (Área para la gráfica de ventas)
+      </div>
+    </div>
+
+    <div class="flex justify-end p-4 border-t bg-gray-50">
+      <span class="text-xl font-bold text-gray-800">
+        Total: {{ totalVentas }}
+      </span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+    
+    <div class="space-y-4">
+      <h3 class="text-xl font-bold text-yellow-500">Ventas Netas</h3>
+      
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">Producto:</label>
+        <input type="text" class="w-full p-2 border rounded-lg shadow-sm">
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">Identificador:</label>
+        <input type="text" class="w-full p-2 border rounded-lg shadow-sm">
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-500">Ventas Unitarias</h3>
+      </div>
+
+  </div>
+
+</div>

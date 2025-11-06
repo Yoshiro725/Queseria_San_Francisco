@@ -1,1 +1,122 @@
-<p>reportes works!</p>
+<div class="flex flex-col space-y-6">
+
+  <div class="bg-white rounded-lg shadow-md overflow-hidden border-4 border-blue-300">
+    
+    <div class="bg-yellow-300 p-4">
+      <h2 class="text-2xl font-bold text-gray-800 text-center">Reportes</h2>
+    </div>
+
+    <div class="p-2 flex justify-center space-x-2 bg-yellow-300">
+      
+      <button 
+        (click)="seleccionarDateTab('dia')"
+        [class.bg-white]="activeDateTab === 'dia'"
+        [class.shadow]="activeDateTab === 'dia'"
+        class="font-semibold py-2 px-6 rounded-lg hover:bg-yellow-200">
+        Día
+      </button>
+      <button 
+        (click)="seleccionarDateTab('semana')"
+        [class.bg-white]="activeDateTab === 'semana'"
+        [class.shadow]="activeDateTab === 'semana'"
+        class="font-semibold py-2 px-6 rounded-lg hover:bg-yellow-200">
+        Semana
+      </button>
+      <button 
+        (click)="seleccionarDateTab('mes')"
+        [class.bg-white]="activeDateTab === 'mes'"
+        [class.shadow]="activeDateTab === 'mes'"
+        class="font-semibold py-2 px-6 rounded-lg hover:bg-yellow-200">
+        Mes
+      </button>
+      <button 
+        (click)="seleccionarDateTab('año')"
+        [class.bg-white]="activeDateTab === 'año'"
+        [class.shadow]="activeDateTab === 'año'"
+        class="font-semibold py-2 px-6 rounded-lg hover:bg-yellow-200">
+        Año
+      </button>
+    </div>
+
+    <div class="p-6 h-64 overflow-y-auto">
+      
+      <table *ngIf="reportesFiltrados.length > 0; else noHayDatos" 
+             class="w-full text-left">
+        <thead class="bg-gray-100 sticky top-0">
+          <tr class="text-sm font-semibold text-gray-600">
+            <th class="p-3">Fecha</th>
+            <th class="p-3">Tipo</th>
+            <th class="p-3">Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reporte of reportesFiltrados" class="border-b hover:bg-gray-50">
+            <td class="p-3 text-sm">{{ reporte.fecha }}</td>
+            <td class="p-3 text-sm">
+              <span class="font-semibold"
+                    [class.text-green-600]="reporte.tipo === 'Venta'"
+                    [class.text-blue-600]="reporte.tipo === 'Producción'"
+                    [class.text-purple-600]="reporte.tipo === 'Inventario'">
+                {{ reporte.tipo }}
+              </span>
+            </td>
+            <td class="p-3 text-sm text-gray-700">{{ reporte.descripcion }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #noHayDatos>
+        <div class="text-center text-gray-500 p-10">
+          No hay reportes de '{{ activeReportType }}' para '{{ activeDateTab }}'.
+        </div>
+      </ng-template>
+
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md p-6 text-center space-y-6">
+    
+    <div class="flex justify-center space-x-4">
+      <button 
+        (click)="seleccionarReportType('inventario')"
+        [class.bg-gray-800]="activeReportType === 'inventario'"
+        [class.text-white]="activeReportType === 'inventario'"
+        [class.bg-gray-200]="activeReportType !== 'inventario'"
+        class="font-semibold py-2 px-8 rounded-full shadow-sm hover:bg-gray-300">
+        Inventario
+      </button>
+      <button 
+        (click)="seleccionarReportType('ventas')"
+        [class.bg-gray-800]="activeReportType === 'ventas'"
+        [class.text-white]="activeReportType === 'ventas'"
+        [class.bg-gray-200]="activeReportType !== 'ventas'"
+        class="font-semibold py-2 px-8 rounded-full shadow-sm hover:bg-gray-300">
+        Ventas
+      </button>
+    </div>
+
+    <div class="text-center">
+      <button (click)="crearGrafica()"
+        class="bg-green-400 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-green-500">
+        Crear Gráficas
+      </button>
+    </div>
+
+    <div class="bg-gray-100 rounded-lg p-4 h-72">
+      <div *ngIf="isBrowser" class="w-full h-full">
+        <canvas 
+          #chartCanvas
+          baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          [type]="barChartType">
+        </canvas>
+      </div>
+      <div *ngIf="!isBrowser" class="flex items-center justify-center h-full text-gray-500">
+        Gráfica no disponible en servidor
+      </div>
+    </div>
+
+  </div>
+
+</div>
