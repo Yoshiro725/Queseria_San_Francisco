@@ -5,6 +5,7 @@ import { Dashboard } from './dashboard/dashboard';
 import { Produccion } from './pages/produccion/produccion'; //agregamos el componente inventarion 
 import { Ventas } from './pages/ventas/ventas';
 import { Reportes } from './pages/reportes/reportes';
+import { Inventario } from './pages/inventario/inventario'; //importamos el componente inventario
 
 export const routes: Routes = [
     { 
