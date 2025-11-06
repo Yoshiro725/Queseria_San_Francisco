@@ -2,8 +2,8 @@
 
 import { Routes } from '@angular/router';
 import { Dashboard } from './dashboard/dashboard';
-import { Produccion } from './pages/produccion/produccion'; //agregamos el componente inventarion 
-
+import { Produccion } from './pages/produccion/produccion'; //agregamos el  
+import { Inventario } from './pages/inventario/inventario'; //agregamos el componente inventarion
 export const routes: Routes = [
     { 
         path: '', 
@@ -17,5 +17,10 @@ export const routes: Routes = [
     {
         path: 'produccion', component: Produccion
     },
+    {
+        path: 'inventario', component: Inventario
+    }
+    
+
 
 ];
