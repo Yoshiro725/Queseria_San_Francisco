@@ -1,9 +1,9 @@
 <div class="fixed inset-0 bg-black/60 z-40" (click)="onCerrarClick()"></div>
 
 <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl">
-
+  
   <div class="bg-white rounded-lg shadow-xl max-h-[90vh] flex flex-col">
-
+    
     <div class="flex justify-between items-center p-4 border-b">
       <h3 class="text-xl font-bold text-gray-800">Crear Nueva Receta</h3>
       <button (click)="onCerrarClick()" class="text-gray-400 hover:text-gray-600 font-bold p-2 rounded-full leading-none">
@@ -12,54 +12,129 @@
     </div>
 
     <div class="overflow-y-auto">
-      <form class="p-6 space-y-4">
-
+      
+      <form [formGroup]="recetaForm" (ngSubmit)="guardarReceta()" class="p-6 space-y-4">
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Nombre de la Receta *
-          </label>
-          <input type="text" placeholder="Ej: Queso Fresco" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500">
+          <label class="block text-sm font-medium text-gray-700">Nombre de la Receta *</label>
+          <input type="text" formControlName="nombre" placeholder="Ej: Queso Fresco" 
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Categoría *
-          </label>
-          <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500">
+          <label class="block text-sm font-medium text-gray-700">Categoría *</label>
+          <select formControlName="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
             <option>Queso</option>
             <option>Yogurt</option>
             <option>Derivado</option>
             <option>Otros</option>
           </select>
         </div>
-
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Descripción/Observaciones (Opcional)
-          </label>
-          <textarea rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="Cualquier nota adicional sobre el proceso..."></textarea>
+          <label class="block text-sm font-medium text-gray-700">Descripción (Opcional)</label>
+          <textarea formControlName="descripcion" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"></textarea>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">
-            Estado
-          </label>
-          <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-indigo-500 focus:ring-indigo-500">
+          <label class="block text-sm font-medium text-gray-700">Estado</label>
+          <select formControlName="estado" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
             <option>Activo</option>
             <option>Inactivo</option>
           </select>
         </div>
 
+        <div class="border-t pt-4">
+          <h4 class="text-lg font-medium text-gray-800 mb-2">Insumos Requeridos</h4>
+          
+          <div formArrayName="insumos" class="space-y-3">
+            
+            <div *ngFor="let insumo of insumos.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="grid grid-cols-12 gap-2 p-3 bg-gray-50 rounded-lg items-center">
+              
+              <div class="col-span-5">
+                <label class="block text-xs font-medium text-gray-600">Insumo</label>
+                <select formControlName="nombre" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                  <option value="">Seleccionar...</option>
+                  <option>Leche Entera</option>
+                  <option>Sal</option>
+                  <option>Cuajo</option>
+                  <option>Chile Jalapeño</option>
+                </select>
+              </div>
+
+              <div class="col-span-3">
+                <label class="block text-xs font-medium text-gray-600">Cantidad</label>
+                <input type="number" formControlName="cantidad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+              </div>
+
+              <div class="col-span-3">
+                <label class="block text-xs font-medium text-gray-600">Unidad</label>
+                <input type="text" formControlName="unidad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+              </div>
+
+              <div class="col-span-1 pt-5">
+                <button type="button" (click)="quitarInsumo(i)" 
+                        class="text-red-500 hover:text-red-700 font-bold p-2">
+                  X
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <button type="button" (click)="agregarInsumo()" 
+                  class="mt-3 bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-lg hover:bg-blue-200">
+            + Agregar Insumo
+          </button>
+        </div>
+
+        <div formGroupName="rendimiento" class="border-t pt-4 space-y-4">
+          <h4 class="text-lg font-medium text-gray-800">Rendimiento</h4>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Cantidad Producida *</label>
+              <input type="number" formControlName="cantidadProducida" placeholder="Ej: 20"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+            </div>
+            <div>
+            <label class="block text-sm font-medium text-gray-700">Unidad de Rendimiento *</label>
+            <select formControlName="unidadRendimiento"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                <option>kg</option>
+                <option>L</option>
+                <option>g</option>
+                <option>mL</option>
+                <option>unidad(es)</option>
+            </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Rango (Opcional)</label>
+              <input type="text" formControlName="rangoOpcional" placeholder="Ej: 18-20 kg"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-500">Porcentaje (Calculado)</label>
+              <input type="text" formControlName="porcentajeRendimiento" placeholder="20%"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100" readonly>
+            </div>
+          </div>
+        </div>
+
       </form>
     </div>
-
+    
     <div class="flex justify-end items-center p-4 border-t bg-gray-50 rounded-b-lg space-x-3">
-      <button (click)="onCerrarClick()" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">
+      <button type="button" (click)="onCerrarClick()" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">
         Cancelar
       </button>
-      <button class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">
+      
+      <button type="submit" (click)="guardarReceta()" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">
         Guardar Receta
       </button>
     </div>
