@@ -69,13 +69,13 @@ listaRecetas: Receta[] = [
       nombre: 'Sal', 
       cantidad: '2.5 Kg', 
       stock: '6 Kg', 
-      status: 'low' // Amarillo
+      status: 'Bajo' // Amarillo
     },
     { 
       nombre: 'Cuajo', 
       cantidad: '25 Ml', 
       stock: '10 Ml', 
-      status: 'out' // Rojo
+      status: 'Agotado' // Rojo
     },
   ];
 

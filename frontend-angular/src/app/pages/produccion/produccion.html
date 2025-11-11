@@ -1,7 +1,7 @@
 <div class="flex flex-col space-y-6">
 
  <div class="bg-white rounded-lg shadow-md overflow-hidden">
-
+  <!-- Primer tabla de recetario -->
     <div class="bg-yellow-300 p-4 flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-800">RECETARIO</h2>
       <button 
@@ -43,7 +43,8 @@
               <span class="ml-2 text-gray-700">Inactivo</span>
             </label>
           </div>
-        </div> <div>
+        </div>
+        <div>
           <button 
             (click)="seleccionarReceta(receta)"
             [disabled]="receta.estado === 'inactivo'"
@@ -63,28 +64,52 @@
     <div class="p-6">
       
       <h3 class="text-lg font-semibold text-gray-700 mb-4">
-        Nueva Producción: {{ recetaSeleccionada ? recetaSeleccionada.nombre : '--------' }}
+        Nueva Producción de: {{ recetaSeleccionada ? recetaSeleccionada.nombre : '--------' }}
       </h3>
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">
+        Observaciones de la Receta: {{ recetaSeleccionada ? recetaSeleccionada.observaciones : '--------' }}
+      </h2>
+
+      <div class="bg-yellow-200 p-1">
+        <h3 class="text-2xl font-bold text-gray-800 text-center">Insumos Necesarios</h3>
+      </div>
       
-      <div class="grid grid-cols-3 gap-4 mb-2 p-3 bg-yellow-200 rounded-lg font-bold text-gray-700">
-        <div class="text-center">Insumo</div>
-        <div class="text-center">Cantidad</div>
-        <div class="text-center">Stock</div>
+      <div class="grid grid-cols-4 gap-4 font-bold text-gray-700 border-b pb-2 mb-3">
+        <div class="text-left">Insumo</div>
+        <div class="text-center">Cantidad Requerida</div>
+        <div class="text-center">Stock Actual</div>
+        <div class="text-center">Estado</div>
       </div>
 
-      <div class="space-y-3">
-        <div *ngFor="let insumo of insumosFormulario" class="grid grid-cols-3 gap-4 text-center font-semibold">
-          <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.nombre }}</span>
-          <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.cantidad }}</span>
-          <span class="rounded-full py-2 px-4"
-                [class.bg-green-300]="insumo.status === 'ok'"
-                [class.bg-yellow-300]="insumo.status === 'low'"
-                [class.bg-red-300]="insumo.status === 'out'">
+      <div class="space-y-3 max-h-60 overflow-y-auto pr-2"> 
+        
+        <div *ngFor="let insumo of insumosFormulario" 
+             class="grid grid-cols-4 gap-4 items-center bg-gray-100 rounded-lg p-3 shadow-sm">
+          
+          <div class="font-semibold text-gray-800 text-left">
+            {{ insumo.nombre }}
+          </div>
+          
+          <div class="text-center font-semibold">
+            {{ insumo.cantidad }}
+          </div>
+          
+          <div class="text-center font-semibold">
             {{ insumo.stock }}
-          </span>
+          </div>
+          
+          <div class="text-center">
+            <span class="px-3 py-1 text-xs font-bold rounded-full"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': insumo.status === 'ok',
+                    'bg-yellow-100 text-yellow-800': insumo.status === 'Bajo',
+                    'bg-red-100 text-red-800': insumo.status === 'Agotado'
+                  }">
+              {{ insumo.status | uppercase }} </span>
+          </div>
+
         </div>
       </div>
-
       <div class="flex justify-center space-x-4 mt-8">
         <button class="bg-green-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-green-500">
           Confirmar Producción
@@ -95,7 +120,7 @@
       </div>
     </div>
   </div>
-  </div>
+</div>
 
 <app-nueva-receta-modal 
   *ngIf="isModalOpen" 
