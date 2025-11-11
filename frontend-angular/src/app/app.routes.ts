@@ -29,5 +29,9 @@ export const routes: Routes = [
         path: 'reportes', 
         component: Reportes
     },
+    {
+        path: 'inventario',
+        component: Inventario
+    },
 
 ];

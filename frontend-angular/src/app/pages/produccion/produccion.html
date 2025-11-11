@@ -1,6 +1,6 @@
 <div class="flex flex-col space-y-6">
 
-  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+ <div class="bg-white rounded-lg shadow-md overflow-hidden">
 
     <div class="bg-yellow-300 p-4 flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-800">RECETARIO</h2>
@@ -16,20 +16,44 @@
       <div *ngFor="let receta of listaRecetas" 
            class="bg-gray-100 rounded-lg p-4 flex justify-between items-center shadow">
         
-        <div>
-          <div class="text-lg font-bold text-gray-800">{{ receta.nombre }}</div>
-          <div class="text-sm text-gray-600">Rendimiento: {{ receta.rendimiento }}</div>
-        </div>
-
-        <button 
-          (click)="seleccionarReceta(receta)"
-          class="bg-green-400 text-white font-bold py-2 px-6 rounded-full shadow hover:bg-green-500">
-          Iniciar Producción
-        </button>
+        <div class="flex items-center space-x-4">
+          
+          <div>
+            <div class="text-lg font-bold text-gray-800">{{ receta.nombre }}</div>
+            <div class="text-sm text-gray-600">Rendimiento: {{ receta.rendimiento }} {{ receta.unidad }}</div>
+          </div>
+          
+          <div class="flex items-center space-x-3 p-2 rounded-lg bg-gray-200">
+            <label class="inline-flex items-center">
+              <input type="radio" 
+                     class="form-radio text-blue-600" 
+                     [name]="'receta-estado-' + receta.id" 
+                     value="activo" 
+                     [checked]="receta.estado === 'activo'"
+                     (change)="cambiarEstadoReceta(receta.id, 'activo')">
+              <span class="ml-2 text-gray-700">Activo</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="radio" 
+                     class="form-radio text-red-600" 
+                     [name]="'receta-estado-' + receta.id" 
+                     value="inactivo"
+                     [checked]="receta.estado === 'inactivo'"
+                     (change)="cambiarEstadoReceta(receta.id, 'inactivo')">
+              <span class="ml-2 text-gray-700">Inactivo</span>
+            </label>
+          </div>
+        </div> <div>
+          <button 
+            (click)="seleccionarReceta(receta)"
+            [disabled]="receta.estado === 'inactivo'"
+            class="bg-green-400 text-white font-bold py-2 px-6 rounded-full shadow hover:bg-green-500
+                   disabled:opacity-50 disabled:cursor-not-allowed">
+            Seleccionar Producción
+          </button>
+        </div> </div>
       </div>
     </div>
-  </div>
-
   <div class="bg-white rounded-lg shadow-md overflow-hidden">
 
     <div class="bg-yellow-300 p-4">
@@ -49,13 +73,9 @@
       </div>
 
       <div class="space-y-3">
-        
         <div *ngFor="let insumo of insumosFormulario" class="grid grid-cols-3 gap-4 text-center font-semibold">
-          
           <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.nombre }}</span>
-          
           <span class="bg-gray-100 rounded-full py-2 px-4">{{ insumo.cantidad }}</span>
-          
           <span class="rounded-full py-2 px-4"
                 [class.bg-green-300]="insumo.status === 'ok'"
                 [class.bg-yellow-300]="insumo.status === 'low'"
@@ -75,7 +95,8 @@
       </div>
     </div>
   </div>
-</div>
+  </div>
+
 <app-nueva-receta-modal 
   *ngIf="isModalOpen" 
   (cerrar)="cerrarModalNuevaReceta()">

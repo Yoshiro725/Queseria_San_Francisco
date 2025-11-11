@@ -13,13 +13,47 @@ import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-rece
 })
 export class Produccion{
   // --- 3. Datos de prueba para el RECETARIO ---
-  listaRecetas: Receta[] = [
-    { id: '1', nombre: 'Queso Fresco', rendimiento: '18-20 Kg' },
-    { id: '2', nombre: 'Queso Seco', rendimiento: '30-40 Kg' },
-    { id: '3', nombre: 'Queso Fresco', rendimiento: '18-20 Kg' },
-    { id: '4', nombre: 'Queso Fresco', rendimiento: '18-20 Kg' },
-    { id: '5', nombre: 'Queso Seco', rendimiento: '30-40 Kg' },
-    { id: '6', nombre: 'Queso Fresco', rendimiento: '18-20 Kg' }
+listaRecetas: Receta[] = [
+    { 
+      id: '1', 
+      nombre: 'Queso Fresco', 
+      rendimiento: 18, 
+      unidad: 'Kg', 
+      observaciones: 'Receta base', 
+      estado: 'activo' 
+    },
+    { 
+      id: '2', 
+      nombre: 'Queso Seco', 
+      rendimiento: 30, 
+      unidad: 'Kg', 
+      observaciones: 'Maduración de 30 días', 
+      estado: 'activo' 
+    },
+    { 
+      id: '3', 
+      nombre: 'Quesillo', 
+      rendimiento: 17, 
+      unidad: 'Kg', 
+      observaciones: 'Pasta hilada', 
+      estado: 'activo' 
+    },
+    { 
+      id: '4', 
+      nombre: 'Yogurt', 
+      rendimiento: 100, 
+      unidad: 'L', 
+      observaciones: 'Fermentación 6 horas', 
+      estado: 'activo' 
+    },
+    { 
+      id: '5', 
+      nombre: 'Crema', 
+      rendimiento: 10, 
+      unidad: 'L', 
+      observaciones: 'A partir de 100L de leche', 
+      estado: 'activo' 
+    },
   ];
 
   // --- 4. Datos de prueba para el FORMULARIO ---
@@ -57,5 +91,18 @@ export class Produccion{
 
   cerrarModalNuevaReceta(): void {
     this.isModalOpen = false;
+  }
+  cambiarEstadoReceta(id: string, nuevoEstado: 'activo' | 'inactivo'): void {
+    const receta = this.listaRecetas.find(r => r.id === id);
+    if (receta) {
+      receta.estado = nuevoEstado;
+      console.log(`Receta ${receta.nombre} ahora está ${nuevoEstado}`);
+
+      // Lógica extra: Si la receta que se inactivó era la seleccionada,
+      // la quitamos del formulario de abajo.
+      if (nuevoEstado === 'inactivo' && this.recetaSeleccionada?.id === id) {
+        this.recetaSeleccionada = null;
+      }
+    }
   }
 }
