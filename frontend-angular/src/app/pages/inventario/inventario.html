@@ -13,34 +13,51 @@
     <!-- Sección de Filtros dentro de la tarjeta de Insumos -->
     <div class="p-4 border-b border-gray-200">
       <h3 class="text-lg font-bold text-gray-800 mb-2">Filtrar Insumos</h3>
-      <div class="flex flex-wrap gap-4 items-center">
+      <!-- Usamos TailwindCSS 'peer' para estilizar el badge cuando el radio button está seleccionado -->
+      <div class="flex flex-wrap gap-3 items-center">
 
-      <!-- Opción Todos -->
-      <label class="inline-flex items-center">
-        <input type="radio" class="form-radio text-blue-600" name="filtroInsumos" value="todos" checked>
-        <span class="ml-2 text-gray-700">Materia Prima</span>
-      </label>
+        <!-- Filtro Materia Prima -->
+        <label class="cursor-pointer">
+          <input type="radio" class="peer sr-only" name="filtroInsumos" value="materia-prima" checked />
+          <div class="px-4 py-1 rounded-full text-sm font-semibold border border-gray-300 bg-gray-100 text-gray-700 
+                      peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600
+                      transition-colors duration-200">
+            Materia Prima
+          </div>
+        </label>
 
-      <!-- Opción Bajo Stock -->
-      <label class="inline-flex items-center">
-        <input type="radio" class="form-radio text-yellow-600" name="filtroInsumos" value="bajoStock">
-        <span class="ml-2 text-gray-700">Embalaje</span>
-      </label>
+        <!-- Filtro Embalaje -->
+        <label class="cursor-pointer">
+          <input type="radio" class="peer sr-only" name="filtroInsumos" value="embalaje" />
+          <div class="px-4 py-1 rounded-full text-sm font-semibold border border-gray-300 bg-gray-100 text-gray-700 
+                      peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500
+                      transition-colors duration-200">
+            Embalaje
+          </div>
+        </label>
 
-      <!-- Opción Agotado -->
-      <label class="inline-flex items-center">
-        <input type="radio" class="form-radio text-red-600" name="filtroInsumos" value="agotado">
-        <span class="ml-2 text-gray-700">Ingrediente</span>
-      </label>
+        <!-- Filtro Ingrediente -->
+        <label class="cursor-pointer">
+          <input type="radio" class="peer sr-only" name="filtroInsumos" value="ingrediente" />
+          <div class="px-4 py-1 rounded-full text-sm font-semibold border border-gray-300 bg-gray-100 text-gray-700 
+                      peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600
+                      transition-colors duration-200">
+            Ingrediente
+          </div>
+        </label>
 
-      <!-- Opción Por Categoría (ejemplo) -->
-      <label class="inline-flex items-center">
-        <input type="radio" class="form-radio text-green-600" name="filtroInsumos" value="categoria">
-        <span class="ml-2 text-gray-700">Derivado</span>
-      </label>
+        <!-- Filtro Derivado -->
+        <label class="cursor-pointer">
+          <input type="radio" class="peer sr-only" name="filtroInsumos" value="derivado" />
+          <div class="px-4 py-1 rounded-full text-sm font-semibold border border-gray-300 bg-gray-100 text-gray-700 
+                      peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-600
+                      transition-colors duration-200">
+            Derivado
+          </div>
+        </label>
 
+      </div>
     </div>
-  </div>
     <!-- Tabla de Insumos -->
     <div class="p-6 space-y-4 max-h-80 overflow-y-auto">
       <!-- Encabezados de la tabla de insumos -->
@@ -55,15 +72,26 @@
       <div *ngFor="let insumo of listaInsumos" class="grid grid-cols-5 gap-4 items-center bg-gray-100 rounded-lg p-3 shadow-sm">
         <div class="font-semibold text-gray-800 col-span-2">{{ insumo.nombre }}</div>
         <div class="text-center font-semibold">{{ insumo.stockActual }} {{ insumo.unidad }}</div>
-        <div class="text-center font-semibold"
-             [class.text-green-600]="insumo.estado === 'ok'"
-             [class.text-yellow-600]="insumo.estado === 'bajo'"
-             [class.text-red-600]="insumo.estado === 'agotado'">
-          {{ insumo.estado | uppercase }}
+        <!-- Badge para el estado -->
+        <div class="text-center">
+          <span class="px-3 py-1 text-xs font-bold rounded-full"
+                [ngClass]="{
+                  'bg-green-100 text-green-800': insumo.estado === 'ok',
+                  'bg-yellow-100 text-yellow-800': insumo.estado === 'bajo',
+                  'bg-red-100 text-red-800': insumo.estado === 'agotado'
+                }">
+            {{ insumo.estado | uppercase }}
+          </span>
         </div>
         <div class="text-center">
-          <button (click)="seleccionarInsumo(insumo)" class="bg-blue-400 text-white font-bold py-1 px-4 rounded-full shadow hover:bg-blue-500 text-sm">
-            Seleccionar
+          <!-- Botón dinámico -->
+          <button (click)="seleccionarInsumo(insumo)" 
+                  class="text-white font-bold py-1 px-4 rounded-full shadow text-sm transition-colors"
+                  [ngClass]="{
+                    'bg-blue-400 hover:bg-blue-500': insumoSeleccionado !== insumo,
+                    'bg-red-500 hover:bg-red-600': insumoSeleccionado === insumo
+                  }">
+            {{ insumoSeleccionado === insumo ? 'Deseleccionar' : 'Seleccionar' }}
           </button>
         </div>
       </div>

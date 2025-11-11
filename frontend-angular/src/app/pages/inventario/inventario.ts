@@ -29,9 +29,14 @@ export class Inventario {
 
   insumoSeleccionado: Insumo | null = null;
 
-  // Método para el botón "Seleccionar" (por ahora solo imprime en consola)
+  // Método para seleccionar o deseleccionar un insumo
   seleccionarInsumo(insumo: Insumo): void {
-    console.log('Insumo seleccionado:', insumo);
-    this.insumoSeleccionado = insumo;
+    if (this.insumoSeleccionado === insumo) {
+      // Si el insumo ya está seleccionado, lo deseleccionamos (lo volvemos null)
+      this.insumoSeleccionado = null;
+    } else {
+      // Si es un insumo nuevo, lo seleccionamos
+      this.insumoSeleccionado = insumo;
+    }
   }
 }
