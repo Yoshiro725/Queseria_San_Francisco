@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from app.db.database import init_db
+from app.routes import ai
+from app.routes import ia_inventario 
+
 
 # ✅ Importa las rutas antes de incluirlas
 from app.routes import (
@@ -8,6 +11,7 @@ from app.routes import (
     productos,
     producciones,
     categoria_insumo,
+    ai,
     recetas,
     derivados,
     inventario_productos,
@@ -58,3 +62,5 @@ app.include_router(denominaciones.router)
 app.include_router(distribucion_pagos.router)
 app.include_router(reporte_inventario.router)
 app.include_router(reporte_produccion.router)
+app.include_router(ai.router)
+app.include_router(ia_inventario.router)

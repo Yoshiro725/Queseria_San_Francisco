@@ -8,6 +8,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     class Config:
-        env_file = ".env"  # 👈 Esto le dice a Pydantic que lea tu archivo .env
+        env_file = ".env"
 
 settings = Settings()

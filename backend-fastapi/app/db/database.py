@@ -2,6 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.core.config import settings
 
+
 # Importa tus modelos
 from app.models.ciudad import Ciudad
 from app.models.proveedor import Proveedor

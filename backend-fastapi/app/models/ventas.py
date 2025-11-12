@@ -1,31 +1,32 @@
-# models/ventas.py
-from beanie import Document, Link
+from beanie import Document
 from pydantic import BaseModel, Field
+from typing import List, Optional, Any
 from datetime import datetime
-from typing import List
-from app.models.cliente import Cliente
-from app.models.productos_lacteos import ProductoLacteo
 
-class VentaDetalle(BaseModel):
-    producto_id: Link[ProductoLacteo]
-    cantidad: float
-    precioVenta: float
+class DetalleVenta(BaseModel):
+    producto_id: Any
+    cantidad: int
+    precioVenta: Optional[float] = None
 
 class Venta(Document):
-    fecha_venta: datetime
-    total: float
-    IVA: float
-    cliente_id: Link[Cliente]
-    detalle: List[VentaDetalle]
+    fecha_venta: datetime = Field(default_factory=datetime.utcnow)
+    total: float = 0
+    IVA: float = 0
+    cliente_id: Optional[Any] = None  # ✅ ahora puede faltar
+    detalle: List[DetalleVenta] = Field(default_factory=list)
 
+    class Settings:
+        name = "ventas"
+
+
+# ✅ Agregamos VentaResponse al final
 class VentaResponse(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     fecha_venta: datetime
     total: float
     IVA: float
-    cliente_id: str
-    detalle: List[VentaDetalle]
+    cliente_id: Optional[Any]
+    detalle: List[dict]
 
     class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+        from_attributes = True  # equivale a orm_mode en Pydantic v1
