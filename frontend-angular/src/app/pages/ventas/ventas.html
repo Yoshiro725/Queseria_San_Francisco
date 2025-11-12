@@ -2,8 +2,13 @@
 
   <div class="bg-white rounded-lg shadow-md overflow-hidden">
     
-    <div class="bg-yellow-300 p-4">
-      <h2 class="text-2xl font-bold text-gray-800 text-center">Venta de productos</h2>
+    <div class="bg-yellow-300 p-4 flex justify-between items-center">
+      <h2 class="text-2xl font-bold text-gray-800">REGISTRO DE VENTAS</h2>
+      <!-- Botón para abrir el modal de nueva venta -->
+      <button (click)="abrirModalNuevaVenta()"
+              class="text-sm font-semibold text-gray-700 hover:text-black">
+        + Nueva Venta
+      </button>
     </div>
 
     <div class="p-4 flex justify-center space-x-2 bg-gray-50">
@@ -43,3 +48,9 @@
   </div>
 
 </div>
+
+<!-- Componente del modal que se mostrará condicionalmente -->
+<app-nueva-venta-modal
+  *ngIf="isVentaModalOpen"
+  (cerrar)="cerrarModalNuevaVenta()">
+</app-nueva-venta-modal>

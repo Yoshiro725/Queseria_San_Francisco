@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NuevaVentaModal } from '../../components/nueva-venta-modal/nueva-venta-modal';
 
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NuevaVentaModal],
   templateUrl: './ventas.html',
   styleUrl: './ventas.scss',
 })
@@ -20,5 +21,16 @@ export class Ventas {
     this.activeTab = tab;
     // Aquí, en el futuro, cargarías los datos para ese tab
     // Ej: this.cargarVentasDelDia();
+  }
+
+  // --- Lógica para controlar el modal ---
+  isVentaModalOpen = false;
+
+  abrirModalNuevaVenta(): void {
+    this.isVentaModalOpen = true;
+  }
+
+  cerrarModalNuevaVenta(): void {
+    this.isVentaModalOpen = false;
   }
 }
