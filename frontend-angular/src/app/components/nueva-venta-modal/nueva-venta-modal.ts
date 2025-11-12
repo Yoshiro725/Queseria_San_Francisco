@@ -12,6 +12,7 @@ import { ProductoLacteo } from '../../models/producto-lacteo.interface';
 })
 export class NuevaVentaModal implements OnInit {
   @Output() cerrar = new EventEmitter<void>();
+  @Output() ventaGuardada = new EventEmitter<number>(); // <-- El evento que emitirá el total
 
   ventaForm: FormGroup;
   totalVenta: number = 0;
@@ -96,9 +97,10 @@ export class NuevaVentaModal implements OnInit {
 
   guardarVenta() {
     if (this.ventaForm.valid) {
-      console.log('Venta Guardada:', this.ventaForm.getRawValue());
+      const ventaCompleta = this.ventaForm.getRawValue();
+      console.log('Venta Guardada:', ventaCompleta);
       // Aquí llamarías a tu servicio para guardar la venta en la BD
-      this.onCerrarClick(); // Cierra el modal después de guardar
+      this.ventaGuardada.emit(this.totalVenta); // <-- Emitimos el total de la venta
     } else {
       console.log('Formulario de venta inválido');
       this.ventaForm.markAllAsTouched();

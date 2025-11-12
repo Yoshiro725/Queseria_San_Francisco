@@ -11,40 +11,87 @@
       </button>
     </div>
 
-    <div class="p-4 flex justify-center space-x-2 bg-gray-50">
+    <!-- Sección de Filtros -->
+    <div class="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 border-b">
+      <div>
+        <label class="block text-xs font-medium text-gray-600">Fecha Desde</label>
+        <input type="date" [(ngModel)]="filtroFechaDesde" class="mt-1 w-full p-2 border rounded-md shadow-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600">Fecha Hasta</label>
+        <input type="date" [(ngModel)]="filtroFechaHasta" class="mt-1 w-full p-2 border rounded-md shadow-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600">Nombre del Cliente</label>
+        <input type="text" [(ngModel)]="filtroCliente" placeholder="Buscar cliente..." class="mt-1 w-full p-2 border rounded-md shadow-sm">
+      </div>
+      <div class="flex items-end space-x-2">
+        <button (click)="aplicarFiltros()" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600">
+          Filtrar
+        </button>
+        <button (click)="limpiarFiltros()" title="Limpiar filtros" class="p-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <div class="p-6 h-64">
-      <div class="text-center text-gray-500">
+    <!-- Tabla de Ventas y Detalles -->
+    <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Columna de la Tabla -->
+      <div class="lg:col-span-2">
+        <div class="overflow-x-auto max-h-[400px]">
+          <table class="min-w-full bg-white">
+            <thead class="bg-gray-100 sticky top-0">
+              <tr>
+                <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">Fecha</th>
+                <th class="py-2 px-4 text-left text-sm font-semibold text-gray-600">Cliente</th>
+                <th class="py-2 px-4 text-right text-sm font-semibold text-gray-600">Total</th>
+                <th class="py-2 px-4 text-center text-sm font-semibold text-gray-600">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr *ngFor="let venta of ventasFiltradas" class="hover:bg-gray-50" [class.bg-blue-100]="venta === ventaSeleccionada">
+                <td class="py-2 px-4">{{ venta.fecha }}</td>
+                <td class="py-2 px-4">{{ venta.cliente }}</td>
+                <td class="py-2 px-4 text-right font-medium">{{ venta.total | currency }}</td>
+                <td class="py-2 px-4 text-center">
+                  <button (click)="seleccionarVenta(venta)" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">
+                    Seleccionar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Columna de Detalles -->
+      <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg shadow-inner">
+        <h3 class="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Detalles de la Venta</h3>
+        <div *ngIf="ventaSeleccionada; else noSeleccionado" class="space-y-2">
+          <p><strong>Cliente:</strong> {{ ventaSeleccionada.cliente }}</p>
+          <p><strong>Fecha:</strong> {{ ventaSeleccionada.fecha }}</p>
+          <p><strong>Total:</strong> {{ ventaSeleccionada.total | currency }}</p>
+          <h4 class="font-bold mt-3 border-t pt-2">Productos:</h4>
+          <ul class="list-disc list-inside text-sm space-y-1">
+            <li *ngFor="let producto of ventaSeleccionada.productos">
+              {{ producto.cantidad }}x {{ producto.nombre }} - {{ producto.precio | currency }} c/u
+            </li>
+          </ul>
+        </div>
+        <ng-template #noSeleccionado>
+          <p class="text-gray-500 text-center mt-4">Selecciona una venta para ver los detalles.</p>
+        </ng-template>
       </div>
     </div>
 
     <div class="flex justify-end p-4 border-t bg-gray-50">
       <span class="text-xl font-bold text-gray-800">
-        Total: {{ totalVentas }}
+        Total Filtrado: {{ totalVentas | currency }}
       </span>
     </div>
-  </div>
-
-  <div class="grid grid-cols-2 gap-6">
-    
-    <div class="space-y-4">
-      <h3 class="text-xl font-bold text-yellow-500">Ventas Netas</h3>
-      
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700">Producto:</label>
-        <input type="text" class="w-full p-2 border rounded-lg shadow-sm">
-      </div>
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-gray-700">Identificador:</label>
-        <input type="text" class="w-full p-2 border rounded-lg shadow-sm">
-      </div>
-    </div>
-
-    <div>
-      <h3 class="text-xl font-bold text-blue-500">Ventas Unitarias</h3>
-      </div>
-
   </div>
 
 </div>
@@ -52,5 +99,6 @@
 <!-- Componente del modal que se mostrará condicionalmente -->
 <app-nueva-venta-modal
   *ngIf="isVentaModalOpen"
-  (cerrar)="cerrarModalNuevaVenta()">
+  (cerrar)="cerrarModalNuevaVenta()"
+  (ventaGuardada)="onVentaGuardada($event)">
 </app-nueva-venta-modal>
