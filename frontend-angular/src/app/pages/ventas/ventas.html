@@ -3,44 +3,14 @@
   <div class="bg-white rounded-lg shadow-md overflow-hidden">
     
     <div class="bg-yellow-300 p-4">
-      <h2 class="text-2xl font-bold text-gray-800 text-center">Ventas</h2>
+      <h2 class="text-2xl font-bold text-gray-800 text-center">Venta de productos</h2>
     </div>
 
     <div class="p-4 flex justify-center space-x-2 bg-gray-50">
-      
-      <button 
-        (click)="seleccionarTab('dia')"
-        [class.bg-yellow-400]="activeTab === 'dia'"
-        [class.bg-gray-200]="activeTab !== 'dia'"
-        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
-        Día
-      </button>
-      <button 
-        (click)="seleccionarTab('semana')"
-        [class.bg-yellow-400]="activeTab === 'semana'"
-        [class.bg-gray-200]="activeTab !== 'semana'"
-        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
-        Semana
-      </button>
-      <button 
-        (click)="seleccionarTab('mes')"
-        [class.bg-yellow-400]="activeTab === 'mes'"
-        [class.bg-gray-200]="activeTab !== 'mes'"
-        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
-        Mes
-      </button>
-      <button 
-        (click)="seleccionarTab('año')"
-        [class.bg-yellow-400]="activeTab === 'año'"
-        [class.bg-gray-200]="activeTab !== 'año'"
-        class="font-semibold py-2 px-6 rounded-full hover:bg-yellow-300">
-        Año
-      </button>
     </div>
 
     <div class="p-6 h-64">
       <div class="text-center text-gray-500">
-        (Área para la gráfica de ventas)
       </div>
     </div>
 

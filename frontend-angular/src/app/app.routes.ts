@@ -6,6 +6,7 @@ import { Produccion } from './pages/produccion/produccion'; //agregamos el compo
 import { Ventas } from './pages/ventas/ventas';
 import { Reportes } from './pages/reportes/reportes';
 import { Inventario } from './pages/inventario/inventario'; //importamos el componente inventario
+import { Compras } from './pages/compras/compras';
 
 export const routes: Routes = [
     { 
@@ -33,5 +34,8 @@ export const routes: Routes = [
         path: 'inventario',
         component: Inventario
     },
-
+    {
+        path: 'compras',
+        component: Compras
+    },
 ];
