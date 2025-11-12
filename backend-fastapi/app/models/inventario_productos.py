@@ -1,8 +1,11 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
 
-class InventarioProducto(Document):
+class InventarioProducto(BaseModel):
+    id: Optional[str] = Field(alias="_id")
     producto_id: str
-    cantidad: float
-
-    class Settings:
-        name = "inventario_productos"
+    fecha_entrada: datetime
+    cantidad_disponible: float
+    costo_unitario: float
+    ubicacion: str

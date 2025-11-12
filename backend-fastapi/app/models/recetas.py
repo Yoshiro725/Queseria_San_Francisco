@@ -1,8 +1,15 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
-class Receta(Document):
-    nombre: str
-    ingredientes: list[str]
+class RecetaInsumo(BaseModel):
+    insumo_id: str
+    cantidad: float
+    unidad: str
 
-    class Settings:
-        name = "recetas"
+class Receta(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    producto_id: str
+    rendimiento: float
+    unidad_rendimiento: str
+    observaciones: Optional[str]
+    insumos: List[RecetaInsumo]

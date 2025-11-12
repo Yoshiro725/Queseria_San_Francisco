@@ -1,10 +1,11 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
 
-class MovimientoInsumo(Document):
+class MovimientoInsumo(BaseModel):
+    id: Optional[str] = Field(alias="_id")
     insumo_id: str
-    tipo: str  # "entrada" o "salida"
+    fecha: datetime
+    tipo_mov: str
     cantidad: float
-    fecha: str
-
-    class Settings:
-        name = "movimientos_insumo"
+    descripcion: str

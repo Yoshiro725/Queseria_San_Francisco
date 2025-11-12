@@ -1,11 +1,16 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional, List
 
-class Venta(Document):
-    cliente_id: str
+class DetalleVenta(BaseModel):
     producto_id: str
-    cantidad: float
-    total: float
-    fecha: str
+    cantidad: int
+    precioVenta: float
 
-    class Settings:
-        name = "ventas"
+class Venta(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    fecha_venta: datetime
+    total: float
+    IVA: float
+    cliente_id: str
+    detalle: List[DetalleVenta]

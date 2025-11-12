@@ -1,8 +1,6 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from typing import Optional
 
-class CategoriaInsumo(Document):
-    nombre: str
-    descripcion: str | None = None
-
-    class Settings:
-        name = "categorias_insumo"
+class CategoriaInsumo(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    nombre_categoria: str

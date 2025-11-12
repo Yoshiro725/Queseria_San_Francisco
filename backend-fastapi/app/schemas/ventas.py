@@ -1,22 +1,31 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from datetime import datetime
 
-class VentaCreate(BaseModel):
-    cliente_id: str
+class DetalleVenta(BaseModel):
     producto_id: str
     cantidad: int
+    precioVenta: float
+
+class VentaBase(BaseModel):
+    fecha_venta: datetime
     total: float
+    IVA: float
+    cliente_id: str
+    detalle: List[DetalleVenta]
+
+class VentaCreate(VentaBase):
+    pass
 
 class VentaUpdate(BaseModel):
-    cliente_id: str | None = None
-    producto_id: str | None = None
-    cantidad: int | None = None
-    total: float | None = None
+    total: Optional[float]
+    IVA: Optional[float]
+    cliente_id: Optional[str]
+    detalle: Optional[List[DetalleVenta]]
 
-class VentaRead(BaseModel):
-    id: str
-    cliente_id: str
-    producto_id: str
-    cantidad: int
-    total: float
-    fecha: datetime
+class VentaRead(VentaBase):
+    id: str = Field(alias="_id")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True

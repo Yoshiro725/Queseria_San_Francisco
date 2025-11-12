@@ -1,9 +1,9 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from typing import Optional
 
-class Derivado(Document):
-    nombre: str
-    tipo: str
-    descripcion: str | None = None
-
-    class Settings:
-        name = "derivados"
+class Derivado(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    receta_origen_id: str
+    nombre_derivado: str
+    cantidad_generada: float
+    unidad: str

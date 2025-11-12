@@ -1,12 +1,13 @@
 from pydantic_settings import BaseSettings
 
-
 class Settings(BaseSettings):
-    mongo_url: str = "mongodb://127.0.0.1:27017"
-    mongo_db: str = "Queseria_SanFrancisco"
-    # Puedes agregar JWT o más configuraciones si lo necesitas
-    jwt_secret_key: str = "supersecretkey"
-    jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    MONGO_URI: str
+    DB_NAME: str
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    class Config:
+        env_file = ".env"  # 👈 Esto le dice a Pydantic que lea tu archivo .env
 
 settings = Settings()

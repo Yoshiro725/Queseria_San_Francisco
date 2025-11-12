@@ -1,4 +1,4 @@
-from app.models.producciones import Produccion
+from app.models.produccion import Produccion
 
 async def create_produccion(produccion_data):
     await produccion_data.insert()

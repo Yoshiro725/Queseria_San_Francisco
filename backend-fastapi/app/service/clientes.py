@@ -1,23 +1,12 @@
-from app.models.clientes import Cliente
+from app.models.cliente import Cliente
+from app.schemas.cliente import ClienteCreate
+from bson import ObjectId
 
-async def create_cliente(cliente_data):
-    await cliente_data.insert()
-    return cliente_data
-
-async def get_cliente(cliente_id: str):
-    return await Cliente.get(cliente_id)
-
-async def update_cliente(cliente_id: str, update_data: dict):
-    cliente = await Cliente.get(cliente_id)
-    if cliente:
-        await cliente.set(update_data)
-    return cliente
-
-async def delete_cliente(cliente_id: str):
-    cliente = await Cliente.get(cliente_id)
-    if cliente:
-        await cliente.delete()
-    return cliente
-
-async def list_clientes():
-    return await Cliente.find_all().to_list()
+async def create_cliente(cliente: ClienteCreate):
+    cliente_obj = Cliente(**cliente.dict())
+    await cliente_obj.insert()
+    # Convertir los campos a string para evitar errores de serialización
+    cliente_obj.id = str(cliente_obj.id)
+    if hasattr(cliente_obj, "ciudad_id") and not isinstance(cliente_obj.ciudad_id, str):
+        cliente_obj.ciudad_id = str(cliente_obj.ciudad_id.id)
+    return cliente_obj

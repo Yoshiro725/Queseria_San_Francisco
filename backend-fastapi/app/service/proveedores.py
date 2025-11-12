@@ -1,4 +1,4 @@
-from app.models.proveedores import Proveedor
+from app.models.proveedor import Proveedor
 
 async def create_proveedor(proveedor_data: Proveedor):
     await proveedor_data.insert()

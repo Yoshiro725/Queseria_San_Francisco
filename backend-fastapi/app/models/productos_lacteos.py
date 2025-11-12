@@ -1,9 +1,9 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from typing import Optional
 
-class ProductoLacteo(Document):
-    nombre: str
-    tipo: str
-    descripcion: str | None = None
+class ProductoLacteo(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    desc_queso: str
+    precio: float
+    totalInventario: float
 
-    class Settings:
-        name = "productos_lacteos"

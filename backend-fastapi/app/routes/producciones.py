@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.producciones import ProduccionCreate, ProduccionUpdate, ProduccionRead
-from app.models.producciones import Produccion
+from app.schemas.produccion import ProduccionCreate, ProduccionUpdate, ProduccionRead
+from app.models.produccion import Produccion
 from app.service.producciones import create_produccion, get_produccion, update_produccion, delete_produccion, list_producciones
 
 router = APIRouter(prefix="/producciones", tags=["Producciones"])

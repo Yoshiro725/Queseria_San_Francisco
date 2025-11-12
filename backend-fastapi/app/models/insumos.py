@@ -1,9 +1,11 @@
-from beanie import Document
+from pydantic import BaseModel, Field
+from typing import Optional
 
-class Insumo(Document):
-    nombre: str
-    cantidad: float
+class Insumo(BaseModel):
+    id: Optional[str] = Field(alias="_id")
+    nombre_insumo: str
     unidad: str
-
-    class Settings:
-        name = "insumos"
+    categoria_id: str
+    stock_actual: float
+    stock_minimo: float
+    costo_unitario: float
