@@ -8,7 +8,7 @@ from .entrega_diaria import EntregaDiaria
 from .insumos import Insumo
 from .inventario_productos import InventarioProducto
 from .movimientos_insumo import MovimientoInsumo
-from .pago_semanale import PagoSemanal
+from .pago_semanales import PagoSemanal
 from .precio_litro import PrecioLitro
 from .produccion import Produccion
 from .productos_lacteos import ProductoLacteo

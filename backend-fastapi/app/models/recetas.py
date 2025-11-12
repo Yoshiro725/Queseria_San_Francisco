@@ -1,15 +1,17 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from beanie import Document, Link
+from pydantic import BaseModel
+from typing import List
+from app.models.productos_lacteos import ProductoLacteo
+from app.models.insumos import Insumo
 
-class RecetaInsumo(BaseModel):
-    insumo_id: str
+class InsumoReceta(BaseModel):
+    insumo_id: Link[Insumo]
     cantidad: float
     unidad: str
 
-class Receta(BaseModel):
-    id: Optional[str] = Field(alias="_id")
-    producto_id: str
+class Receta(Document):
+    producto_id: Link[ProductoLacteo]  # Relación con productos lácteos
     rendimiento: float
     unidad_rendimiento: str
-    observaciones: Optional[str]
-    insumos: List[RecetaInsumo]
+    observaciones: str
+    insumos: List[InsumoReceta]

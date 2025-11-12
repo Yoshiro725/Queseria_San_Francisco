@@ -2,7 +2,28 @@ from fastapi import FastAPI
 from app.db.database import init_db
 
 # ✅ Importa las rutas antes de incluirlas
-from app.routes import cliente, productos, proveedores, ventas, producciones
+from app.routes import (
+    cliente,
+    proveedores,
+    productos,
+    producciones,
+    categoria_insumo,
+    recetas,
+    derivados,
+    inventario_productos,
+    ventas,
+    precio_litro,
+    movimiento_insumo,
+    categoria_insumo,
+    entrega_diaria,
+    pagos_semanales,
+    denominaciones,
+    distribucion_pagos,
+    reporte_inventario,
+    reporte_produccion,
+    cuidades
+)
+
 
 
 app = FastAPI(title="Quesería San Francisco API")
@@ -18,8 +39,22 @@ async def root():
     return {"mensaje": "Quesería San Francisco funcionando 🚀"}
 
 # ✅ Registrar las rutas (endpoints) principales
-app.include_router(cliente.router)
-app.include_router(productos.router)
+app.include_router(cuidades.router)
 app.include_router(proveedores.router)
-app.include_router(ventas.router)
+app.include_router(cliente.router)
+app.include_router(categoria_insumo.router)
+app.include_router(categoria_insumo.router)
+app.include_router(movimiento_insumo.router)
+app.include_router(productos.router)
+app.include_router(recetas.router)
+app.include_router(derivados.router)
 app.include_router(producciones.router)
+app.include_router(inventario_productos.router)
+app.include_router(ventas.router)
+app.include_router(precio_litro.router)
+app.include_router(entrega_diaria.router)
+app.include_router(pagos_semanales.router)
+app.include_router(denominaciones.router)
+app.include_router(distribucion_pagos.router)
+app.include_router(reporte_inventario.router)
+app.include_router(reporte_produccion.router)

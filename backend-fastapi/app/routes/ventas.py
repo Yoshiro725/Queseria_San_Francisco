@@ -1,36 +1,57 @@
+# routes/ventas.py
 from fastapi import APIRouter, HTTPException
-from app.schemas.ventas import VentaCreate, VentaUpdate, VentaRead
-from app.models.ventas import Venta
-from app.service.ventas import create_venta, get_venta, update_venta, delete_venta, list_ventas
+from typing import List
+from app.models.ventas import Venta, VentaResponse
 
 router = APIRouter(prefix="/ventas", tags=["Ventas"])
 
-@router.post("/", response_model=VentaRead)
-async def create_venta_endpoint(venta: VentaCreate):
-    venta_doc = Venta(**venta.dict())
-    return await create_venta(venta_doc)
+@router.post("/", response_model=VentaResponse)
+async def create_venta(v: Venta):
+    doc = await v.insert()
+    return VentaResponse(
+        id=str(doc.id),
+        fecha_venta=doc.fecha_venta,
+        total=doc.total,
+        IVA=doc.IVA,
+        cliente_id=str(doc.cliente_id.id),
+        detalle=doc.detalle
+    )
 
-@router.get("/", response_model=list[VentaRead])
-async def list_ventas_endpoint():
-    return await list_ventas()
+@router.get("/", response_model=List[VentaResponse])
+async def list_ventas():
+    ventas = await Venta.find_all().to_list()
+    return [
+        VentaResponse(
+            id=str(v.id),
+            fecha_venta=v.fecha_venta,
+            total=v.total,
+            IVA=v.IVA,
+            cliente_id=str(v.cliente_id.id),
+            detalle=v.detalle
+        )
+        for v in ventas
+    ]
 
-@router.get("/{venta_id}", response_model=VentaRead)
-async def get_venta_endpoint(venta_id: str):
-    venta = await get_venta(venta_id)
-    if not venta:
+@router.put("/{venta_id}", response_model=VentaResponse)
+async def update_venta(venta_id: str, data: Venta):
+    v = await Venta.get(venta_id)
+    if not v:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
-    return venta
-
-@router.put("/{venta_id}", response_model=VentaRead)
-async def update_venta_endpoint(venta_id: str, venta: VentaUpdate):
-    updated_venta = await update_venta(venta_id, venta.dict(exclude_unset=True))
-    if not updated_venta:
-        raise HTTPException(status_code=404, detail="Venta no encontrada")
-    return updated_venta
+    await v.update({"$set": data.dict(exclude_unset=True)})
+    v = await Venta.get(venta_id)
+    return VentaResponse(
+        id=str(v.id),
+        fecha_venta=v.fecha_venta,
+        total=v.total,
+        IVA=v.IVA,
+        cliente_id=str(v.cliente_id.id),
+        detalle=v.detalle
+    )
 
 @router.delete("/{venta_id}")
-async def delete_venta_endpoint(venta_id: str):
-    deleted = await delete_venta(venta_id)
-    if not deleted:
+async def delete_venta(venta_id: str):
+    v = await Venta.get(venta_id)
+    if not v:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
-    return {"mensaje": "Venta eliminada correctamente"}
+    await v.delete()
+    return {"message": "Venta eliminada"}
