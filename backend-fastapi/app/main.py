@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import init_db
+from app.routes import productos
 from app.routes import insumos
 from app.routes import (
     cliente, proveedores, productos, producciones, categoria_insumo,
@@ -31,6 +32,7 @@ async def root():
     return {"mensaje": "Quesería San Francisco funcionando 🚀"}
 
 # ✅ Registrar las rutas
+app.include_router(productos.router)
 app.include_router(insumos.router)
 app.include_router(cuidades.router)
 app.include_router(proveedores.router)

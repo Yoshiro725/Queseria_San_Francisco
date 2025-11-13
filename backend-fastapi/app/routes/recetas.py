@@ -7,6 +7,62 @@ from app.schemas.recetas import RecetaResponse, RecetaCreate
 
 router = APIRouter(prefix="/recetas", tags=["Recetas"])
 
+# ✅ FUNCIÓN CONVERT_MONGO_TO_RESPONSE CORREGIDA
+async def convert_mongo_to_response(receta_data: dict) -> RecetaResponse:
+    try:
+        print("🔄 Convirtiendo receta a respuesta:", receta_data)
+        
+        if not receta_data:
+            raise ValueError("Datos de receta vacíos")
+        
+        database = get_database()
+        
+        # Convertir _id a string
+        receta_id = str(receta_data["_id"])
+        
+        # Convertir producto_id a string
+        producto_id = str(receta_data["producto_id"])
+        
+        # Obtener nombre del producto
+        producto = await database.productos_lacteos.find_one({"_id": receta_data["producto_id"]})
+        nombre_producto = producto.get("desc_queso", "Producto sin nombre") if producto else "Producto no encontrado"
+        
+        # Procesar insumos
+        insumos_con_nombre = []
+        for insumo_data in receta_data.get("insumos", []):
+            insumo_id = str(insumo_data["insumo_id"])
+            
+            # Obtener nombre del insumo
+            insumo = await database.insumos.find_one({"_id": insumo_data["insumo_id"]})
+            nombre_insumo = insumo.get("nombre_insumo", "Insumo sin nombre") if insumo else "Insumo no encontrado"
+            
+            insumos_con_nombre.append({
+                "insumo_id": insumo_id,
+                "nombre_insumo": nombre_insumo,
+                "cantidad": insumo_data["cantidad"],
+                "unidad": insumo_data["unidad"]
+            })
+        
+        response_data = RecetaResponse(
+            id=receta_id,
+            producto_id=producto_id,
+            nombre_producto=nombre_producto,
+            rendimiento=receta_data["rendimiento"],
+            unidad_rendimiento=receta_data["unidad_rendimiento"],
+            observaciones=receta_data["observaciones"],
+            estado=receta_data.get("estado", True),
+            insumos=insumos_con_nombre
+        )
+        
+        print("✅ Respuesta convertida exitosamente")
+        return response_data
+        
+    except Exception as e:
+        print(f"❌ Error en convert_mongo_to_response: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+
 @router.get("/", response_model=List[RecetaResponse])
 async def list_recetas():
     try:
@@ -78,35 +134,54 @@ async def list_recetas():
         print(f"Error general al obtener recetas: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
 
-# Los demás endpoints se mantienen igual...
 @router.post("/", response_model=RecetaResponse)
-async def create_receta(receta: RecetaCreate):
+async def create_receta(receta_data: RecetaCreate):
     try:
-        receta_dict = receta.dict()
+        print("📥 Datos recibidos para crear receta:", receta_data.dict())
         
-        # Convertir strings a ObjectId para la base de datos
-        receta_dict["producto_id"] = ObjectId(receta_dict["producto_id"])
-        for insumo in receta_dict["insumos"]:
-            insumo["insumo_id"] = ObjectId(insumo["insumo_id"])
+        # ✅ CONVERTIR MANUALMENTE strings a ObjectId para MongoDB
+        receta_dict = receta_data.dict()
         
-        nueva_receta = Receta(**receta_dict)
-        await nueva_receta.insert()
+        # Los IDs vienen como strings del frontend, pero MongoDB necesita ObjectId
+        from bson import ObjectId
         
-        # Convertir a respuesta
-        receta_data = {
-            "_id": nueva_receta.id,
-            "producto_id": nueva_receta.producto_id,
-            "rendimiento": nueva_receta.rendimiento,
-            "unidad_rendimiento": nueva_receta.unidad_rendimiento,
-            "observaciones": nueva_receta.observaciones,
-            "estado": nueva_receta.estado,
-            "insumos": nueva_receta.insumos
+        # Crear un nuevo dict con ObjectId
+        mongo_data = {
+            "producto_id": ObjectId(receta_dict["producto_id"]),
+            "rendimiento": receta_dict["rendimiento"],
+            "unidad_rendimiento": receta_dict["unidad_rendimiento"],
+            "observaciones": receta_dict["observaciones"],
+            "estado": receta_dict["estado"],
+            "insumos": [
+                {
+                    "insumo_id": ObjectId(insumo["insumo_id"]),
+                    "cantidad": insumo["cantidad"],
+                    "unidad": insumo["unidad"]
+                }
+                for insumo in receta_dict["insumos"]
+            ]
         }
         
-        return await convert_mongo_to_response(receta_data)
+        print("📤 Creando receta en MongoDB:", mongo_data)
+        
+        # ✅ Usar insert_one directamente para evitar problemas de Beanie
+        database = get_database()
+        result = await database.recetas.insert_one(mongo_data)
+        
+        print("✅ Receta creada exitosamente:", result.inserted_id)
+        
+        # Obtener la receta recién creada
+        receta_creada = await database.recetas.find_one({"_id": result.inserted_id})
+        
+        if not receta_creada:
+            raise HTTPException(status_code=500, detail="No se pudo recuperar la receta creada")
+            
+        return await convert_mongo_to_response(receta_creada)
         
     except Exception as e:
-        print(f"Error creando receta: {e}")
+        print(f"❌ Error creando receta: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error al crear receta: {str(e)}")
 
 @router.get("/{receta_id}", response_model=RecetaResponse)
@@ -127,11 +202,6 @@ async def get_receta(receta_id: str):
     except Exception as e:
         print(f"Error obteniendo receta: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
-
-# Función auxiliar para convertir (si la tienes)
-async def convert_mongo_to_response(receta_data: dict) -> RecetaResponse:
-    # Tu función existente aquí...
-    pass
 
 @router.put("/{receta_id}", response_model=RecetaResponse)
 async def update_receta(receta_id: str, receta_data: RecetaCreate):

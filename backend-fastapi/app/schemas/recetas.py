@@ -1,6 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional
-from bson import ObjectId
+
+class InsumoRecetaCreate(BaseModel):
+    insumo_id: str  # ✅ El frontend envía strings
+    nombre_insumo: Optional[str] = None
+    cantidad: float
+    unidad: str
+
+class RecetaCreate(BaseModel):
+    producto_id: str  # ✅ El frontend envía strings
+    rendimiento: float
+    unidad_rendimiento: str
+    observaciones: str
+    insumos: List[InsumoRecetaCreate]
+    estado: bool = True
 
 class InsumoRecetaResponse(BaseModel):
     insumo_id: str
@@ -17,11 +30,3 @@ class RecetaResponse(BaseModel):
     observaciones: str
     insumos: List[InsumoRecetaResponse]
     estado: bool
-
-class RecetaCreate(BaseModel):
-    producto_id: str
-    rendimiento: float
-    unidad_rendimiento: str
-    observaciones: str
-    insumos: List[InsumoRecetaResponse]
-    estado: bool = True

@@ -1,57 +1,54 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from app.models.productos_lacteos import ProductoLacteo
-from app.schemas.producto_lacteo import ProductoCreate, ProductoRead, ProductoUpdate
+from bson import ObjectId
+from app.db.database import get_database
 
-router = APIRouter(prefix="/productos", tags=["Productos"])
+router = APIRouter(prefix="/productos", tags=["ProductosLacteos"])
 
-@router.get("/", response_model=List[ProductoRead])
-async def listar_productos():
-    productos = await ProductoLacteo.find_all().to_list()
-    return productos
-
-@router.post("/", response_model=ProductoRead)
-async def crear_producto(producto: ProductoCreate):
-    nuevo_producto = ProductoLacteo(**producto.model_dump())
-    await nuevo_producto.insert()
-    return nuevo_producto
-
-@router.get("/productos")
-async def list_productos():
+@router.post("/", response_model=dict)
+async def create_producto(producto_data: dict):
     try:
-        from app.models.productos_lacteos import ProductoLacteo
+        database = get_database()
         
-        # ✅ OBTENER PRODUCTOS REALES
-        productos = await ProductoLacteo.find_all().to_list()
+        # Datos para nuevo producto
+        nuevo_producto = {
+            "desc_queso": producto_data.get("desc_queso", ""),
+            "precio": producto_data.get("precio", 0),
+            "totalInventario": 0  # Siempre empieza en 0
+        }
         
-        productos_convertidos = []
-        for producto in productos:
-            productos_convertidos.append({
-                "id": str(producto.id),
-                "nombre": producto.desc_queso,
-                "precio": producto.precio,
-                "inventario": producto.totalInventario
-            })
+        result = await database.productos_lacteos.insert_one(nuevo_producto)
         
-        return productos_convertidos
+        return {
+            "id": str(result.inserted_id),
+            "desc_queso": nuevo_producto["desc_queso"],
+            "precio": nuevo_producto["precio"],
+            "totalInventario": nuevo_producto["totalInventario"]
+        }
         
     except Exception as e:
-        print(f"❌ Error en GET /productos: {str(e)}")
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=f"Error creando producto: {str(e)}")
 
-
-@router.put("/{producto_id}", response_model=ProductoRead)
-async def actualizar_producto(producto_id: str, datos: ProductoUpdate):
-    producto = await ProductoLacteo.get(producto_id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    await producto.set(datos.model_dump(exclude_unset=True))
-    return producto
-
-@router.delete("/{producto_id}")
-async def eliminar_producto(producto_id: str):
-    producto = await ProductoLacteo.get(producto_id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    await producto.delete()
-    return {"mensaje": "Producto eliminado correctamente"}
+@router.get("/", response_model=List[dict])
+async def list_productos():
+    try:
+        database = get_database()
+        productos_cursor = database.productos_lacteos.find()
+        productos_list = await productos_cursor.to_list(length=None)
+        
+        productos_response = []
+        for producto in productos_list:
+            # Usar 'desc_queso' si existe, sino 'nombre'
+            nombre_producto = producto.get("desc_queso") or producto.get("nombre", "Sin nombre")
+            
+            productos_response.append({
+                "id": str(producto["_id"]),
+                "desc_queso": nombre_producto,
+                "precio": producto.get("precio", 0),
+                "totalInventario": producto.get("totalInventario", 0)
+            })
+        
+        return productos_response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")

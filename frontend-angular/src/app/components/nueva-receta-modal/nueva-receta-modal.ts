@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
   ReactiveFormsModule, 
@@ -7,7 +7,10 @@ import {
   FormArray, 
   Validators 
 } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { RecetaService } from '../../services/receta';
+import { InsumoService, Insumo } from '../../services/insumo.service';
+import { ProductoService, ProductoLacteo } from '../../services/producto.service';
 import { Receta } from '../../models/receta.interface';
 
 @Component({
@@ -17,51 +20,71 @@ import { Receta } from '../../models/receta.interface';
   templateUrl: './nueva-receta-modal.html',
   styleUrl: './nueva-receta-modal.scss'
 })
-export class NuevaRecetaModal {
+export class NuevaRecetaModal implements OnInit {
   @Output() cerrar = new EventEmitter<void>();
   @Output() recetaCreada = new EventEmitter<void>();
 
   recetaForm: FormGroup;
+  loading = false;
+  modoNuevoProducto = true;
 
-  // Datos para los selects (IDs reales de tu MongoDB)
-  productos = [
-    { id: '690d6490f8a037abefeec4b7', nombre: 'Queso Fresco' },
-    { id: '690d6490f8a037abefeec4b8', nombre: 'Quesillo' },
-    { id: '690d657bf8a037abefeec4cb', nombre: 'Requesón' }
-  ];
+  insumosDisponibles: Insumo[] = [];
+  productosExistentes: ProductoLacteo[] = [];
 
-  insumosDisponibles = [
-    { id: '690d6471f8a037abefeec4b3', nombre: 'Leche Entera', unidad: 'L' },
-    { id: '690d6471f8a037abefeec4b4', nombre: 'Sal', unidad: 'kg' },
-    { id: '690d6471f8a037abefeec4b5', nombre: 'Cuajo', unidad: 'ml' }
-  ];
+  constructor(
+    private fb: FormBuilder, 
+    private recetaService: RecetaService,
+    private insumoService: InsumoService,
+    private productoService: ProductoService
+  ) {
+    this.recetaForm = this.createForm();
+  }
 
-  constructor(private fb: FormBuilder, private recetaService: RecetaService) {
-    this.recetaForm = this.fb.group({
-      // CAMBIO: Cambiar 'nombre' por 'producto_id' para el backend
-      nombre: ['', Validators.required], // Lo mantengo temporalmente para tu HTML
-      producto_id: [''], // ← NUEVO: para el backend
+  ngOnInit() {
+    this.cargarInsumosReales();
+    this.cargarProductosExistentes();
+  }
+
+  cargarInsumosReales() {
+    this.insumoService.getInsumos().subscribe({
+      next: (insumos) => {
+        this.insumosDisponibles = insumos;
+      },
+      error: (error) => {
+        console.error('Error cargando insumos:', error);
+      }
+    });
+  }
+
+  cargarProductosExistentes() {
+    this.productoService.getProductos().subscribe({
+      next: (productos) => {
+        this.productosExistentes = productos;
+      },
+      error: (error) => {
+        console.error('Error cargando productos:', error);
+      }
+    });
+  }
+
+  createForm(): FormGroup {
+    return this.fb.group({
+      // Para nuevo producto
+      nombre_receta: ['', Validators.required],
       
-      descripcion: [''],
-      estado: ['Activo'],
+      // Para producto existente
+      producto_existente_id: [''],
+      
+      observaciones: [''],
+      estado: [true],
 
-      // Rendimiento - adaptado para tu HTML
+      // Rendimiento
       rendimiento: this.fb.group({
-        cantidadProducida: ['', [Validators.required, Validators.min(0.1)]],
-        unidadRendimiento: ['kg', Validators.required],
-        rangoOpcional: [''],
-        porcentajeRendimiento: [{ value: '', disabled: true }]
+        cantidad: ['', [Validators.required, Validators.min(0.1)]],
+        unidad: ['kg', Validators.required]
       }),
 
-      insumos: this.fb.array([]),
-    });
-
-    // Sincronizar nombre con producto_id
-    this.recetaForm.get('nombre')?.valueChanges.subscribe(nombre => {
-      const producto = this.productos.find(p => p.nombre === nombre);
-      if (producto) {
-        this.recetaForm.patchValue({ producto_id: producto.id });
-      }
+      insumos: this.fb.array([], Validators.required)
     });
   }
 
@@ -73,27 +96,46 @@ export class NuevaRecetaModal {
     return this.recetaForm.get('rendimiento') as FormGroup;
   }
 
-  // MÉTODO ACTUALIZADO: Para crear insumos compatibles con backend
+  cambiarModo(nuevoModo: boolean) {
+    this.modoNuevoProducto = nuevoModo;
+    
+    if (nuevoModo) {
+      this.recetaForm.get('producto_existente_id')?.clearValidators();
+      this.recetaForm.get('nombre_receta')?.setValidators([Validators.required]);
+    } else {
+      this.recetaForm.get('nombre_receta')?.clearValidators();
+      this.recetaForm.get('producto_existente_id')?.setValidators([Validators.required]);
+    }
+    
+    this.recetaForm.get('nombre_receta')?.updateValueAndValidity();
+    this.recetaForm.get('producto_existente_id')?.updateValueAndValidity();
+  }
+
   nuevoInsumo(): FormGroup {
     return this.fb.group({
-      nombre: ['', Validators.required],     // Para mostrar en el form
-      insumo_id: [''],                       // Para el backend
+      insumo_id: ['', Validators.required],
       cantidad: ['', [Validators.required, Validators.min(0.1)]],
       unidad: ['', Validators.required]
     });
   }
 
-  // ACTUALIZADO: Sincronizar insumo seleccionado con ID real
+  getNombreInsumo(insumoId: string): string {
+    const insumo = this.insumosDisponibles.find(i => i.id === insumoId);
+    return insumo ? insumo.nombre_insumo : 'Seleccionar insumo';
+  }
+
+  getUnidadInsumo(insumoId: string): string {
+    const insumo = this.insumosDisponibles.find(i => i.id === insumoId);
+    return insumo ? insumo.unidad : '';
+  }
+
   onInsumoSeleccionado(index: number) {
     const insumoControl = this.insumos.at(index);
-    const nombreInsumo = insumoControl.get('nombre')?.value;
+    const insumoId = insumoControl.get('insumo_id')?.value;
     
-    const insumo = this.insumosDisponibles.find(i => i.nombre === nombreInsumo);
-    if (insumo) {
-      insumoControl.patchValue({
-        insumo_id: insumo.id,
-        unidad: insumo.unidad
-      });
+    if (insumoId) {
+      const unidad = this.getUnidadInsumo(insumoId);
+      insumoControl.patchValue({ unidad: unidad });
     }
   }
 
@@ -109,87 +151,85 @@ export class NuevaRecetaModal {
     this.cerrar.emit();
   }
 
-  // MÉTODO ACTUALIZADO: Para guardar en el backend
-guardarReceta() {
-  if (this.recetaForm.valid && this.insumos.length > 0) {
-    
-    const formValue = this.recetaForm.value;
-    const rendimiento = formValue.rendimiento;
+  // ✅ FLUJO COMPLETO CORREGIDO
+  async guardarReceta() {
+    if (this.recetaForm.valid && this.insumos.length > 0) {
+      this.loading = true;
 
-    // ✅ CORREGIR: Obtener el producto_id correctamente
-    const productoSeleccionado = this.productos.find(p => p.nombre === formValue.nombre);
-    const producto_id = productoSeleccionado ? productoSeleccionado.id : '';
+      try {
+        const formValue = this.recetaForm.value;
+        const rendimiento = formValue.rendimiento;
 
-    // ✅ CORREGIR: Mapear insumos correctamente
-    const insumosMapeados = formValue.insumos.map((insumo: any) => {
-      const insumoEncontrado = this.insumosDisponibles.find(i => i.nombre === insumo.nombre);
-      return {
-        insumo_id: insumoEncontrado ? insumoEncontrado.id : '',
-        nombre_insumo: insumo.nombre,
-        cantidad: insumo.cantidad,
-        unidad: insumo.unidad
-      };
-    });
+        let productoId: string;
+        let nombreProducto: string;
 
-    // Preparar datos para el backend
-    const recetaData: Receta = {
-      id: '',
-      producto_id: producto_id,
-      nombre_producto: formValue.nombre,
-      rendimiento: rendimiento.cantidadProducida,
-      unidad_rendimiento: rendimiento.unidadRendimiento,
-      observaciones: formValue.descripcion,
-      estado: formValue.estado === 'Activo',
-      insumos: insumosMapeados
-    };
+        // PASO 1: Crear o seleccionar producto
+        if (this.modoNuevoProducto) {
+          // Crear nuevo producto (SIN PRECIO por ahora)
+          const nuevoProducto = await firstValueFrom(
+            this.productoService.createProducto({
+              desc_queso: formValue.nombre_receta,
+              precio: 0, // Precio por defecto
+              totalInventario: 0
+            })
+          );
 
-    console.log('✅ Enviando al backend:', recetaData);
+          productoId = nuevoProducto.id;
+          nombreProducto = nuevoProducto.desc_queso;
+        } else {
+          // Usar producto existente
+          productoId = formValue.producto_existente_id;
+          const productoExistente = this.productosExistentes.find(p => p.id === productoId);
+          nombreProducto = productoExistente ? productoExistente.desc_queso : '';
+        }
 
-    // Validar que tengamos producto_id
-    if (!producto_id) {
-      alert('❌ Error: No se pudo encontrar el ID del producto seleccionado');
-      return;
-    }
+        // PASO 2: Preparar datos de la receta
+        const recetaData: Receta = {
+          id: '',
+          producto_id: productoId,
+          nombre_producto: nombreProducto,
+          rendimiento: rendimiento.cantidad,
+          unidad_rendimiento: rendimiento.unidad,
+          observaciones: formValue.observaciones,
+          estado: formValue.estado,
+          insumos: formValue.insumos.map((insumo: any) => ({
+            insumo_id: insumo.insumo_id,
+            nombre_insumo: this.getNombreInsumo(insumo.insumo_id),
+            cantidad: insumo.cantidad,
+            unidad: insumo.unidad
+          }))
+        };
 
-    // Validar que todos los insumos tengan ID
-    const insumosSinId = recetaData.insumos.filter(insumo => !insumo.insumo_id);
-    if (insumosSinId.length > 0) {
-      alert('❌ Error: Algunos insumos no tienen ID válido');
-      return;
-    }
+        console.log('📤 Creando receta:', recetaData);
 
-    // Llamar al servicio
-    this.recetaService.createReceta(recetaData).subscribe({
-      next: (recetaCreada) => {
-        console.log('✅ Receta creada exitosamente:', recetaCreada);
-        this.recetaCreada.emit();
-        this.onCerrarClick();
-      },
-      error: (error) => {
-        console.error('❌ Error creando receta:', error);
-        alert('Error al crear la receta. Verifica la consola.');
+        // PASO 3: Crear la receta
+        this.recetaService.createReceta(recetaData).subscribe({
+          next: (recetaCreada) => {
+            console.log('✅ Receta creada exitosamente:', recetaCreada);
+            this.loading = false;
+            this.recetaCreada.emit();
+            this.onCerrarClick();
+          },
+          error: (error) => {
+            console.error('❌ Error creando receta:', error);
+            this.loading = false;
+            alert('Error al crear la receta: ' + error.message);
+          }
+        });
+
+      } catch (error) {
+        console.error('❌ Error en el proceso:', error);
+        this.loading = false;
+        alert('Error en el proceso de creación');
       }
-    });
 
-  } else {
-    console.log('Formulario Inválido o sin insumos');
-    this.recetaForm.markAllAsTouched(); 
-    
-    if (this.insumos.length === 0) {
-      alert('Debes agregar al menos un insumo');
+    } else {
+      this.recetaForm.markAllAsTouched();
+      if (this.insumos.length === 0) {
+        alert('⚠️ Debes agregar al menos un insumo');
+      } else {
+        alert('⚠️ Por favor completa todos los campos requeridos');
+      }
     }
-  }
-}
-
-  // Helper para obtener ID del producto por nombre
-  private getProductoIdPorNombre(nombre: string): string {
-    const producto = this.productos.find(p => p.nombre === nombre);
-    return producto ? producto.id : '';
-  }
-
-  // Helper para obtener ID del insumo por nombre
-  private getInsumoIdPorNombre(nombre: string): string {
-    const insumo = this.insumosDisponibles.find(i => i.nombre === nombre);
-    return insumo ? insumo.id : '';
   }
 }
