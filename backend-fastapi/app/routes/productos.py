@@ -16,12 +16,29 @@ async def crear_producto(producto: ProductoCreate):
     await nuevo_producto.insert()
     return nuevo_producto
 
-@router.get("/{producto_id}", response_model=ProductoRead)
-async def obtener_producto(producto_id: str):
-    producto = await ProductoLacteo.get(producto_id)
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return producto
+@router.get("/productos")
+async def list_productos():
+    try:
+        from app.models.productos_lacteos import ProductoLacteo
+        
+        # ✅ OBTENER PRODUCTOS REALES
+        productos = await ProductoLacteo.find_all().to_list()
+        
+        productos_convertidos = []
+        for producto in productos:
+            productos_convertidos.append({
+                "id": str(producto.id),
+                "nombre": producto.desc_queso,
+                "precio": producto.precio,
+                "inventario": producto.totalInventario
+            })
+        
+        return productos_convertidos
+        
+    except Exception as e:
+        print(f"❌ Error en GET /productos: {str(e)}")
+        return {"error": str(e)}
+
 
 @router.put("/{producto_id}", response_model=ProductoRead)
 async def actualizar_producto(producto_id: str, datos: ProductoUpdate):

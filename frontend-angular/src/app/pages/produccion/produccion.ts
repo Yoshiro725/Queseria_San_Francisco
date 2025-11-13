@@ -1,8 +1,9 @@
-import { Component} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Receta } from '../../models/receta.interface';
 import { InsumoFormulario } from '../../models/insumo-formulario.interface';
-import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal'; //importamos el nuevo modal para nuevas recetas 
+import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal';
+import { RecetaService } from '../../services/receta';
 
 @Component({
   selector: 'app-produccion',
@@ -11,76 +12,102 @@ import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-rece
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
 })
-export class Produccion{
-  // --- 3. Datos de prueba para el RECETARIO ---
-listaRecetas: Receta[] = [
-    { 
-      id: '1', 
-      nombre: 'Queso Fresco', 
-      rendimiento: 18, 
-      unidad: 'Kg', 
-      observaciones: 'Receta base', 
-      estado: 'activo' 
-    },
-    { 
-      id: '2', 
-      nombre: 'Queso Seco', 
-      rendimiento: 30, 
-      unidad: 'Kg', 
-      observaciones: 'Maduración de 30 días', 
-      estado: 'activo' 
-    },
-    { 
-      id: '3', 
-      nombre: 'Quesillo', 
-      rendimiento: 17, 
-      unidad: 'Kg', 
-      observaciones: 'Pasta hilada', 
-      estado: 'activo' 
-    },
-    { 
-      id: '4', 
-      nombre: 'Yogurt', 
-      rendimiento: 100, 
-      unidad: 'L', 
-      observaciones: 'Fermentación 6 horas', 
-      estado: 'activo' 
-    },
-    { 
-      id: '5', 
-      nombre: 'Crema', 
-      rendimiento: 10, 
-      unidad: 'L', 
-      observaciones: 'A partir de 100L de leche', 
-      estado: 'activo' 
-    },
-  ];
-
-  // --- 4. Datos de prueba para el FORMULARIO ---
-  // (En el futuro, esto se llenaría al hacer clic en "Iniciar Producción")
-  insumosFormulario: InsumoFormulario[] = [
-    { 
-      nombre: 'Leche Entera', 
-      cantidad: '10L', 
-      stock: '150L', 
-      status: 'ok' 
-    },
-    { 
-      nombre: 'Sal', 
-      cantidad: '2.5 Kg', 
-      stock: '6 Kg', 
-      status: 'Bajo' // Amarillo
-    },
-    { 
-      nombre: 'Cuajo', 
-      cantidad: '25 Ml', 
-      stock: '10 Ml', 
-      status: 'Agotado' // Rojo
-    },
-  ];
-
-  isModalOpen = false;
+export class Produccion implements OnInit {
+  
+  // Variables principales
+  listaRecetas: Receta[] = [];
   recetaSeleccionada: Receta | null = null;
+  insumosFormulario: InsumoFormulario[] = [];
+  isModalOpen = false;
+  loading = true;
+  error = '';
+
+  constructor(private recetaService: RecetaService) {}
+
+  ngOnInit() {
+    this.cargarRecetasDesdeBackend();
+    this.cargarInsumosFormulario();
+  }
+
+  // ✅ MÉTODO NUEVO: Para cuando se crea una receta
+  onRecetaCreada() {
+    console.log('Receta creada - recargando lista...');
+    this.cargarRecetasDesdeBackend(); // Recargar las recetas desde el backend
+  }
+
+  cargarRecetasDesdeBackend() {
+    this.loading = true;
+    this.recetaService.getRecetas().subscribe({
+      next: (recetas) => {
+        this.listaRecetas = recetas;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando recetas:', error);
+        this.error = 'Error al cargar las recetas';
+        this.loading = false;
+        // Mantenemos datos de prueba como fallback
+        this.listaRecetas = this.getDatosPrueba();
+      }
+    });
+  }
+
+  // Método para cargar los insumos del formulario
+  private cargarInsumosFormulario() {
+    this.insumosFormulario = [
+      { 
+        nombre: 'Leche Entera', 
+        cantidad: '10L', 
+        stock: '150L', 
+        status: 'ok' 
+      },
+      { 
+        nombre: 'Sal', 
+        cantidad: '2.5 Kg', 
+        stock: '6 Kg', 
+        status: 'Bajo'
+      },
+      { 
+        nombre: 'Cuajo', 
+        cantidad: '25 Ml', 
+        stock: '10 Ml', 
+        status: 'Agotado'
+      },
+    ];
+  }
+
+  // Mantener datos de prueba como respaldo
+  private getDatosPrueba(): Receta[] {
+    return [
+      { 
+        id: '1', 
+        producto_id: '1',
+        nombre_producto: 'Queso Fresco',
+        rendimiento: 18, 
+        unidad_rendimiento: 'Kg',
+        observaciones: 'Receta base', 
+        estado: true,
+        insumos: [
+          { insumo_id: '1', nombre_insumo: 'Leche Entera', cantidad: 15, unidad: 'L' },
+          { insumo_id: '2', nombre_insumo: 'Sal', cantidad: 0.5, unidad: 'kg' }
+        ]
+      },
+      { 
+        id: '2', 
+        producto_id: '2',
+        nombre_producto: 'Queso Seco',
+        rendimiento: 30, 
+        unidad_rendimiento: 'Kg',
+        observaciones: 'Maduración de 30 días', 
+        estado: true,
+        insumos: [
+          { insumo_id: '1', nombre_insumo: 'Leche Entera', cantidad: 20, unidad: 'L' },
+          { insumo_id: '2', nombre_insumo: 'Sal', cantidad: 0.8, unidad: 'kg' }
+        ]
+      }
+    ];
+  }
+
   seleccionarReceta(receta: Receta): void {
     this.recetaSeleccionada = receta;
   }
@@ -92,15 +119,24 @@ listaRecetas: Receta[] = [
   cerrarModalNuevaReceta(): void {
     this.isModalOpen = false;
   }
-  cambiarEstadoReceta(id: string, nuevoEstado: 'activo' | 'inactivo'): void {
+
+  cambiarEstadoReceta(id: string, nuevoEstado: boolean): void {
     const receta = this.listaRecetas.find(r => r.id === id);
     if (receta) {
+      // Actualizar localmente primero para respuesta rápida
       receta.estado = nuevoEstado;
-      console.log(`Receta ${receta.nombre} ahora está ${nuevoEstado}`);
+      
+      // Enviar al backend
+      this.recetaService.toggleRecetaEstado(id, nuevoEstado).subscribe({
+        error: (error) => {
+          console.error('Error actualizando estado:', error);
+          // Revertir cambio local si falla
+          receta.estado = !nuevoEstado;
+        }
+      });
 
-      // Lógica extra: Si la receta que se inactivó era la seleccionada,
-      // la quitamos del formulario de abajo.
-      if (nuevoEstado === 'inactivo' && this.recetaSeleccionada?.id === id) {
+      // Si la receta que se inactivó era la seleccionada, la quitamos
+      if (!nuevoEstado && this.recetaSeleccionada?.id === id) {
         this.recetaSeleccionada = null;
       }
     }

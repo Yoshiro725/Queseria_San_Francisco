@@ -1,5 +1,5 @@
 from beanie import Document
-from pydantic import BaseModel, Field
+from pydantic import Field, ConfigDict
 from typing import Optional
 
 class ProductoLacteo(Document):
@@ -9,3 +9,7 @@ class ProductoLacteo(Document):
 
     class Settings:
         name = "productos_lacteos"
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )

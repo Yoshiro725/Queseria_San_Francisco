@@ -1,17 +1,26 @@
-from beanie import Document, Link
-from pydantic import BaseModel
-from typing import List
-from app.models.productos_lacteos import ProductoLacteo
-from app.models.insumos import Insumo
+from beanie import Document
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional
+from bson import ObjectId
 
+# Solución más simple - usar str y dejar que Beanie maneje la conversión
 class InsumoReceta(BaseModel):
-    insumo_id: Link[Insumo]
+    insumo_id: str  # Simple string
     cantidad: float
     unidad: str
 
 class Receta(Document):
-    producto_id: Link[ProductoLacteo]  # Relación con productos lácteos
+    producto_id: str  # Simple string
     rendimiento: float
-    unidad_rendimiento: str
-    observaciones: str
+    unidad_rendimiento: str = "kg"
+    observaciones: str = ""
     insumos: List[InsumoReceta]
+    estado: bool = True
+
+    class Settings:
+        name = "recetas"
+
+    model_config = ConfigDict(
+        json_encoders={ObjectId: str},
+        arbitrary_types_allowed=True
+    )

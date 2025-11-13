@@ -1,38 +1,25 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import init_db
-from app.routes import ai
-from app.routes import ia_inventario 
-
-
-# ✅ Importa las rutas antes de incluirlas
 from app.routes import (
-    cliente,
-    proveedores,
-    productos,
-    producciones,
-    categoria_insumo,
-    ai,
-    recetas,
-    derivados,
-    inventario_productos,
-    ventas,
-    precio_litro,
-    movimiento_insumo,
-    categoria_insumo,
-    entrega_diaria,
-    pagos_semanales,
-    denominaciones,
-    distribucion_pagos,
-    reporte_inventario,
-    reporte_produccion,
-    cuidades
+    cliente, proveedores, productos, producciones, categoria_insumo,
+    ai, recetas, derivados, inventario_productos, ventas, precio_litro,
+    movimiento_insumo, entrega_diaria, pagos_semanales, denominaciones,
+    distribucion_pagos, reporte_inventario, reporte_produccion, cuidades
 )
-
-
 
 app = FastAPI(title="Quesería San Francisco API")
 
-# ✅ Inicializa la base de datos al iniciar el servidor
+# ✅ CONFIGURACIÓN CORS CORRECTA
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],  # URL de Angular
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # ← INCLUIR OPTIONS
+    allow_headers=["*"],  # Permitir todos los headers
+)
+
+# ✅ Inicializa la base de datos
 @app.on_event("startup")
 async def start_db():
     await init_db()
@@ -42,11 +29,10 @@ async def start_db():
 async def root():
     return {"mensaje": "Quesería San Francisco funcionando 🚀"}
 
-# ✅ Registrar las rutas (endpoints) principales
+# ✅ Registrar las rutas
 app.include_router(cuidades.router)
 app.include_router(proveedores.router)
 app.include_router(cliente.router)
-app.include_router(categoria_insumo.router)
 app.include_router(categoria_insumo.router)
 app.include_router(movimiento_insumo.router)
 app.include_router(productos.router)
@@ -63,4 +49,3 @@ app.include_router(distribucion_pagos.router)
 app.include_router(reporte_inventario.router)
 app.include_router(reporte_produccion.router)
 app.include_router(ai.router)
-app.include_router(ia_inventario.router)
