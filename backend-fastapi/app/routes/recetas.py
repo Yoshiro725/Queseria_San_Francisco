@@ -15,14 +15,63 @@ router = APIRouter(prefix="/recetas", tags=["Recetas"])
 async def list_recetas():
     try:
         database = get_database()
-        recetas_cursor = database.recetas.find()
-        recetas_list = await recetas_cursor.to_list(length=None)
+        
+        # Obtener todas las recetas
+        recetas = await database.recetas.find().to_list(length=None)
+        
+        # Obtener todos los productos para mapeo
+        productos = await database.productos_lacteos.find().to_list(length=None)
+        producto_map = {}
+        for p in productos:
+            producto_map[str(p["_id"])] = p.get("desc_queso") or p.get("nombre", "Sin nombre")
+        
+        # Obtener todos los insumos para mapeo
+        insumos = await database.insumos.find().to_list(length=None)
+        insumo_map = {str(i["_id"]): i.get("nombre_insumo", "Sin nombre") for i in insumos}
         
         recetas_response = []
-        for receta_data in recetas_list:
+        for receta_data in recetas:
             try:
-                receta_response = await convert_mongo_to_response(receta_data)
+                # Manejar producto_id (puede ser ObjectId o string)
+                producto_id = receta_data["producto_id"]
+                if isinstance(producto_id, ObjectId):
+                    producto_id_str = str(producto_id)
+                else:
+                    producto_id_str = producto_id
+                
+                nombre_producto = producto_map.get(producto_id_str, "Producto no encontrado")
+                
+                # Mejorar insumos
+                insumos_mejorados = []
+                for insumo in receta_data.get("insumos", []):
+                    # Manejar insumo_id (puede ser ObjectId o string)
+                    insumo_id = insumo["insumo_id"]
+                    if isinstance(insumo_id, ObjectId):
+                        insumo_id_str = str(insumo_id)
+                    else:
+                        insumo_id_str = insumo_id
+                    
+                    nombre_insumo = insumo_map.get(insumo_id_str, "Insumo no encontrado")
+                    
+                    insumos_mejorados.append({
+                        "insumo_id": insumo_id_str,
+                        "nombre_insumo": nombre_insumo,
+                        "cantidad": insumo["cantidad"],
+                        "unidad": insumo["unidad"]
+                    })
+                
+                receta_response = RecetaResponse(
+                    id=str(receta_data["_id"]),
+                    producto_id=producto_id_str,
+                    nombre_producto=nombre_producto,
+                    rendimiento=receta_data["rendimiento"],
+                    unidad_rendimiento=receta_data["unidad_rendimiento"],
+                    observaciones=receta_data["observaciones"],
+                    estado=receta_data.get("estado", True),
+                    insumos=insumos_mejorados
+                )
                 recetas_response.append(receta_response)
+                
             except Exception as e:
                 print(f"Error procesando receta {receta_data.get('_id')}: {e}")
                 continue
@@ -32,7 +81,6 @@ async def list_recetas():
     except Exception as e:
         print(f"Error general al obtener recetas: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
-
 # === ENDPOINTS DE DEBUG ===
 
 @router.get("/debug/productos")
