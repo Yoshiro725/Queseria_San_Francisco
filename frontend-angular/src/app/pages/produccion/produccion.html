@@ -4,23 +4,40 @@
     <!-- Primer tabla de recetario -->
     <div class="bg-yellow-300 p-4 flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-800">RECETARIO</h2>
-      <button 
-        (click)="abrirModalNuevaReceta()" 
-        class="text-sm font-semibold text-gray-700 hover:text-black">
-        + Nueva Receta
-      </button>
+      <div class="flex space-x-2">
+        <button 
+          (click)="recargarManual()" 
+          class="text-sm font-semibold text-gray-700 hover:text-black bg-yellow-400 px-3 py-1 rounded">
+          🔄 Actualizar
+        </button>
+        <button 
+          (click)="abrirModalNuevaReceta()" 
+          class="text-sm font-semibold text-gray-700 hover:text-black">
+          + Nueva Receta
+        </button>
+      </div>
     </div>
 
     <!-- Indicadores de carga -->
     <div *ngIf="loading" class="text-center p-4">
-      Cargando recetas...
+      <div class="inline-flex items-center">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+        Cargando recetas...
+      </div>
     </div>
 
     <div *ngIf="error" class="text-center p-4 text-red-600 bg-red-100">
       {{ error }}
+      <button (click)="cargarRecetasReactivamente()" class="ml-2 text-blue-600 underline">
+        Reintentar
+      </button>
     </div>
 
-    <div class="p-6 space-y-4 max-h-80 overflow-y-auto">
+    <div *ngIf="!loading && !error" class="p-6 space-y-4 max-h-80 overflow-y-auto">
+      
+      <div *ngIf="listaRecetas.length === 0" class="text-center text-gray-500 py-8">
+        No hay recetas disponibles. Crea la primera receta.
+      </div>
       
       <div *ngFor="let receta of listaRecetas" 
            class="bg-gray-100 rounded-lg p-4 flex justify-between items-center shadow">
@@ -93,55 +110,51 @@
         </div>
       </div>
       
-<!-- REEMPLAZA la sección de la tabla de insumos con esto: -->
+      <div class="grid grid-cols-4 gap-4 font-bold text-gray-700 border-b pb-2 mb-3 mt-4">
+        <div class="text-left">Insumo</div>
+        <div class="text-center">Cantidad Requerida</div>
+        <div class="text-center">Stock Actual</div>
+        <div class="text-center">Estado</div>
+      </div>
 
-<div class="grid grid-cols-4 gap-4 font-bold text-gray-700 border-b pb-2 mb-3 mt-4">
-  <div class="text-left">Insumo</div>
-  <div class="text-center">Cantidad Requerida</div>
-  <div class="text-center">Stock Actual</div>
-  <div class="text-center">Estado</div>
-</div>
+      <div class="space-y-3 max-h-60 overflow-y-auto pr-2"> 
+        <!-- Mostrar insumos REALES de la receta seleccionada -->
+        <div *ngIf="recetaSeleccionada && recetaSeleccionada.insumos.length > 0; else noRecetaSeleccionada">
+          
+          <div *ngFor="let insumo of recetaSeleccionada.insumos" 
+               class="grid grid-cols-4 gap-4 items-center bg-gray-100 rounded-lg p-3 shadow-sm">
+            
+            <!-- Columna 1: Nombre del Insumo -->
+            <div class="font-semibold text-gray-800 text-left">
+              {{ insumo.nombre_insumo }}
+            </div>
+            
+            <!-- Columna 2: Cantidad Requerida (de la receta) -->
+            <div class="text-center font-semibold">
+              {{ insumo.cantidad }} {{ insumo.unidad }}
+            </div>
+            
+            <!-- Columna 3: Stock Actual (SOLO el número, sin colores) -->
+            <div class="text-center font-semibold text-blue-600">
+              {{ getStockActual(insumo.insumo_id) }} {{ getUnidadInsumo(insumo.insumo_id) }}
+            </div>
+            
+            <!-- Columna 4: Estado (aquí van los colores) -->
+            <div class="text-center">
+              <span class="px-3 py-1 text-xs font-bold rounded-full"
+                    [ngClass]="getStatusClass(insumo.insumo_id)">
+                {{ getStatusText(insumo.insumo_id) | uppercase }} 
+              </span>
+            </div>
+          </div>
+        </div>
 
-<div class="space-y-3 max-h-60 overflow-y-auto pr-2"> 
-  
-  <!-- Mostrar insumos REALES de la receta seleccionada -->
-<!-- Mostrar insumos REALES de la receta seleccionada -->
-<div *ngIf="recetaSeleccionada && recetaSeleccionada.insumos.length > 0; else noRecetaSeleccionada">
-  
-  <div *ngFor="let insumo of recetaSeleccionada.insumos" 
-       class="grid grid-cols-4 gap-4 items-center bg-gray-100 rounded-lg p-3 shadow-sm">
-    
-    <!-- Columna 1: Nombre del Insumo -->
-    <div class="font-semibold text-gray-800 text-left">
-      {{ insumo.nombre_insumo }}
-    </div>
-    
-    <!-- Columna 2: Cantidad Requerida (de la receta) -->
-    <div class="text-center font-semibold">
-      {{ insumo.cantidad }} {{ insumo.unidad }}
-    </div>
-    
-    <!-- Columna 3: Stock Actual (SOLO el número, sin colores) -->
-    <div class="text-center font-semibold text-blue-600">
-      {{ getStockActual(insumo.insumo_id) }} {{ getUnidadInsumo(insumo.insumo_id) }}
-    </div>
-    
-    <!-- Columna 4: Estado (aquí van los colores) -->
-    <div class="text-center">
-      <span class="px-3 py-1 text-xs font-bold rounded-full"
-            [ngClass]="getStatusClass(insumo.insumo_id)">
-        {{ getStatusText(insumo.insumo_id) | uppercase }} 
-      </span>
-    </div>
-  </div>
-</div>
-
-<ng-template #noRecetaSeleccionada>
-  <div class="text-center text-gray-500 py-4">
-    Selecciona una receta para ver sus insumos
-  </div>
-</ng-template>
-</div>
+        <ng-template #noRecetaSeleccionada>
+          <div class="text-center text-gray-500 py-4">
+            Selecciona una receta para ver sus insumos
+          </div>
+        </ng-template>
+      </div>
       
       <div class="flex justify-center space-x-4 mt-8">
         <button class="bg-green-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-green-500">

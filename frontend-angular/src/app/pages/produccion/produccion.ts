@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { Receta } from '../../models/receta.interface';
 import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal';
 import { RecetaService } from '../../services/receta';
@@ -17,7 +18,7 @@ import { InsumoService, Insumo } from '../../services/insumo.service';
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
 })
-export class Produccion implements OnInit {
+export class Produccion implements OnInit, OnDestroy {
   
   listaRecetas: Receta[] = [];
   recetaSeleccionada: Receta | null = null;
@@ -25,6 +26,10 @@ export class Produccion implements OnInit {
   loading = true;
   error = '';
   insumosReales: Insumo[] = [];
+  
+  // Suscripción para manejar la desuscripción
+  private recetasSubscription: Subscription | undefined;
+  private insumosSubscription: Subscription | undefined;
 
   constructor(
     private recetaService: RecetaService,
@@ -32,19 +37,50 @@ export class Produccion implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.cargarRecetasDesdeBackend();
+    this.cargarRecetasReactivamente();
     this.cargarInsumosReales();
   }
 
-  // ✅ Cargar insumos reales desde el backend
+  ngOnDestroy() {
+    // Limpiar suscripciones al destruir el componente
+    if (this.recetasSubscription) {
+      this.recetasSubscription.unsubscribe();
+    }
+    if (this.insumosSubscription) {
+      this.insumosSubscription.unsubscribe();
+    }
+  }
+
+  // ✅ MÉTODO MEJORADO: Cargar recetas de forma reactiva
+  cargarRecetasReactivamente() {
+    this.loading = true;
+    this.error = '';
+    
+    this.recetasSubscription = this.recetaService.getRecetas().subscribe({
+      next: (recetas) => {
+        this.listaRecetas = recetas;
+        this.loading = false;
+        console.log('📦 Recetas cargadas:', recetas.length);
+      },
+      error: (error) => {
+        console.error('❌ Error cargando recetas:', error);
+        this.error = 'Error al cargar las recetas';
+        this.loading = false;
+        this.listaRecetas = []; // Asegurar que la lista esté vacía en caso de error
+      }
+    });
+  }
+
+  // ✅ MÉTODO MEJORADO: Cargar insumos reales desde el backend
   cargarInsumosReales() {
     this.insumoService.getInsumos().subscribe({
       next: (insumos) => {
         this.insumosReales = insumos;
-        console.log('Insumos cargados:', this.insumosReales);
+        console.log('📦 Insumos cargados:', this.insumosReales.length);
       },
       error: (error) => {
-        console.error('Error cargando insumos:', error);
+        console.error('❌ Error cargando insumos:', error);
+        this.insumosReales = []; // Asegurar array vacío en caso de error
       }
     });
   }
@@ -66,7 +102,7 @@ export class Produccion implements OnInit {
     return insumo ? insumo.unidad : '';
   }
 
-  // ✅ Obtener cantidad requerida de la receta (PÚBLICA para el HTML)
+  // ✅ Obtener cantidad requerida de la receta
   getCantidadRequerida(insumoId: string): number {
     if (!this.recetaSeleccionada) return 0;
     const insumoReceta = this.recetaSeleccionada.insumos.find(i => i.insumo_id === insumoId);
@@ -97,24 +133,10 @@ export class Produccion implements OnInit {
     };
   }
 
-  // Los demás métodos se mantienen igual...
+  // ✅ Este método ahora es más simple
   onRecetaCreada() {
-    this.cargarRecetasDesdeBackend();
-  }
-
-  cargarRecetasDesdeBackend() {
-    this.loading = true;
-    this.recetaService.getRecetas().subscribe({
-      next: (recetas) => {
-        this.listaRecetas = recetas;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando recetas:', error);
-        this.error = 'Error al cargar las recetas';
-        this.loading = false;
-      }
-    });
+    console.log('📢 Receta creada - la lista se actualizará automáticamente');
+    // No necesitamos hacer nada aquí porque el BehaviorSubject se encarga
   }
 
   seleccionarReceta(receta: Receta): void {
@@ -132,11 +154,15 @@ export class Produccion implements OnInit {
   cambiarEstadoReceta(id: string, nuevoEstado: boolean): void {
     const receta = this.listaRecetas.find(r => r.id === id);
     if (receta) {
+      // Actualización optimista
+      const estadoOriginal = receta.estado;
       receta.estado = nuevoEstado;
+      
       this.recetaService.toggleRecetaEstado(id, nuevoEstado).subscribe({
         error: (error) => {
           console.error('Error actualizando estado:', error);
-          receta.estado = !nuevoEstado;
+          // Revertir en caso de error
+          receta.estado = estadoOriginal;
         }
       });
 
@@ -144,5 +170,12 @@ export class Produccion implements OnInit {
         this.recetaSeleccionada = null;
       }
     }
+  }
+
+  // ✅ MÉTODO DE RESPALDO: Recarga manual si es necesario
+  recargarManual() {
+    console.log('🔄 Recarga manual de recetas');
+    // Llamar directamente al método de actualización
+    this.cargarRecetasReactivamente();
   }
 }
