@@ -10,8 +10,9 @@ import { RecetaService } from '../../services/receta';
 import { InsumoService, Insumo } from '../../services/insumo.service';
 import { ProductoService, ProductoLacteo } from '../../services/producto.service';
 
-// Importa el modal correctamente
+// Importa los modales
 import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal';
+import { ModalProduccionComponent } from '../../components/modal-produccion/modal-produccion';
 
 interface InsumoRecetaEnriquecido {
   insumo_id: string;
@@ -30,7 +31,8 @@ interface InsumoRecetaEnriquecido {
     CommonModule, 
     HttpClientModule,
     FormsModule,
-    NuevaRecetaModal
+    NuevaRecetaModal,
+    ModalProduccionComponent
   ],
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
@@ -47,6 +49,9 @@ export class Produccion implements OnInit, OnDestroy {
   
   cantidadProducir: number = 1;
   produccionEnProceso: boolean = false;
+  
+  // Variables para el modal de producción
+  mostrarModalProduccion = false;
   
   private recetasSubscription: Subscription | undefined;
   private insumosSubscription: Subscription | undefined;
@@ -205,6 +210,26 @@ export class Produccion implements OnInit, OnDestroy {
 
   cerrarModalNuevaReceta(): void {
     this.isModalOpen = false;
+  }
+
+  // MÉTODOS PARA EL MODAL DE PRODUCCIÓN
+  abrirModalProduccion(): void {
+    if (this.recetaSeleccionada && this.getProduccionPosible()) {
+      this.mostrarModalProduccion = true;
+    } else {
+      alert('❌ No hay suficiente stock para realizar la producción');
+    }
+  }
+
+  cerrarModalProduccion(): void {
+    this.mostrarModalProduccion = false;
+  }
+
+  onProduccionCreada(datosProduccion: any): void {
+    console.log('✅ Producción creada desde modal:', datosProduccion);
+    // Aquí puedes manejar la producción creada
+    this.confirmarProduccion(); // Llama a tu método existente
+    this.cerrarModalProduccion();
   }
 
   cambiarEstadoReceta(id: string, nuevoEstado: boolean): void {

@@ -1,0 +1,89 @@
+<div class="fixed inset-0 bg-black/60 z-40" (click)="onCerrarClick()"></div>
+
+<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
+  
+  <div class="bg-white rounded-lg shadow-xl max-h-[90vh] flex flex-col">
+    
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="text-xl font-bold text-gray-800">Confirmar Producción</h3>
+      <button (click)="onCerrarClick()" class="text-gray-400 hover:text-gray-600 font-bold p-2 rounded-full leading-none">
+        X
+      </button>
+    </div>
+
+    <div class="overflow-y-auto">
+      
+      <div class="p-6 space-y-6">
+
+        <!-- INFORMACIÓN DE LA PRODUCCIÓN -->
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+          <h4 class="font-semibold text-green-800 mb-2">Resumen de Producción:</h4>
+          <p class="text-lg font-bold text-gray-800">{{ recetaSeleccionada?.nombre_producto }}</p>
+          <p class="text-sm text-gray-600 mt-1">{{ recetaSeleccionada?.observaciones }}</p>
+          
+          <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="font-semibold">Cantidad de lotes:</span>
+              <span class="ml-2 text-blue-600 font-bold">{{ cantidadProducir }}</span>
+            </div>
+            <div>
+              <span class="font-semibold">Total a producir:</span>
+              <span class="ml-2 text-green-600 font-bold">
+                {{ recetaSeleccionada?.rendimiento * cantidadProducir }} {{ recetaSeleccionada?.unidad_rendimiento }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSUMOS REQUERIDOS -->
+        <div class="border-t pt-4">
+          <h4 class="text-lg font-medium text-gray-800 mb-2">Insumos a Utilizar</h4>
+          
+          <div class="space-y-2">
+            <div *ngFor="let insumo of recetaSeleccionada?.insumos" class="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span class="text-sm font-medium">{{ getNombreInsumo(insumo.insumo_id) }}</span>
+              <span class="text-sm text-gray-600">
+                {{ insumo.cantidad * cantidadProducir }} {{ insumo.unidad }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CÓDIGO DE BARRAS -->
+        <div class="border-t pt-4">
+          <h4 class="text-lg font-medium text-gray-800 mb-2">Código de Barras Generado</h4>
+          <div class="bg-gray-100 p-4 rounded-lg text-center">
+            <div class="font-mono text-lg font-bold tracking-wider text-blue-600">
+              {{ codigoBarrasGenerado }}
+            </div>
+            <div class="text-xs text-gray-500 mt-2">
+              Este código se asociará al lote producido
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- BOTONES -->
+    <div class="flex justify-end items-center p-4 border-t bg-gray-50 rounded-b-lg space-x-3">
+      <button 
+        type="button" 
+        (click)="onCerrarClick()" 
+        [disabled]="loading"
+        class="bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50">
+        Cancelar
+      </button>
+      
+      <button 
+        type="button" 
+        (click)="crearProduccion()" 
+        [disabled]="loading"
+        class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+        <span *ngIf="loading" class="animate-spin mr-2">⟳</span>
+        {{ loading ? 'Procesando...' : 'Confirmar Producción' }}
+      </button>
+    </div>
+
+  </div>
+</div>
