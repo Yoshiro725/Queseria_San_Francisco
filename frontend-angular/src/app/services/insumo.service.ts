@@ -16,7 +16,6 @@ export interface Insumo {
 })
 export class InsumoService {
   private apiUrl = 'http://localhost:8000/insumos';
-  
 
   constructor(private http: HttpClient) {}
 
@@ -29,8 +28,18 @@ export class InsumoService {
   getInsumoById(id: string): Observable<Insumo> {
     return this.http.get<Insumo>(`${this.apiUrl}/${id}`);
   }
-  // En insumo.service.ts
-actualizarStockInsumo(insumoId: string, nuevoStock: number): Observable<any> {
-  return this.http.patch(`${this.apiUrl}/${insumoId}`, { stock_actual: nuevoStock });
-}
+
+  // ✅ ACTUALIZADO: Usar PUT en lugar de PATCH
+  actualizarStockInsumo(insumoId: string, nuevoStock: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${insumoId}`, { 
+      stock_actual: nuevoStock 
+    });
+  }
+
+  // ✅ MÉTODO ALTERNATIVO usando PATCH en endpoint específico
+  actualizarStockInsumoAlternativo(insumoId: string, nuevoStock: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${insumoId}/stock`, { 
+      stock_actual: nuevoStock 
+    });
+  }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, forkJoin, firstValueFrom } from 'rxjs';
 
 // Importa las interfaces desde los servicios
 import { Receta } from '../../models/receta.interface';
@@ -30,7 +30,7 @@ interface InsumoRecetaEnriquecido {
     CommonModule, 
     HttpClientModule,
     FormsModule,
-    NuevaRecetaModal // ✅ Ahora está correctamente importado
+    NuevaRecetaModal
   ],
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
@@ -189,7 +189,7 @@ export class Produccion implements OnInit, OnDestroy {
 
   onRecetaCreada() {
     console.log('📢 Receta creada - recargando lista...');
-    this.cargarRecetasReactivamente(); // Recarga las recetas cuando se crea una nueva
+    this.cargarRecetasReactivamente();
   }
 
   seleccionarReceta(receta: Receta): void {
@@ -233,7 +233,7 @@ export class Produccion implements OnInit, OnDestroy {
     this.cargarRecetasReactivamente();
   }
 
-  confirmarProduccion(): void {
+  async confirmarProduccion(): Promise<void> {
     if (!this.recetaSeleccionada || !this.getProduccionPosible()) {
       alert('❌ No hay suficiente stock para realizar la producción');
       return;
@@ -246,56 +246,110 @@ export class Produccion implements OnInit, OnDestroy {
 
     this.produccionEnProceso = true;
 
-    // 1. Calcular los nuevos stocks para cada insumo
-    const actualizacionesInsumos = this.recetaSeleccionada.insumos.map(insumoReceta => {
-      const cantidadTotalRequerida = insumoReceta.cantidad * this.cantidadProducir;
-      const nuevoStock = this.getStockActual(insumoReceta.insumo_id) - cantidadTotalRequerida;
-      
-      return this.insumoService.actualizarStockInsumo(
-        insumoReceta.insumo_id, 
-        nuevoStock
-      );
-    });
-
-    // 2. Calcular la nueva cantidad del producto lácteo
-    const cantidadProducidaTotal = this.recetaSeleccionada.rendimiento * this.cantidadProducir;
-    
-    // 3. Actualizar el inventario del producto lácteo
-    const actualizacionProducto = this.productoService.actualizarInventarioProducto(
-      this.recetaSeleccionada.producto_id,
-      cantidadProducidaTotal
-    );
-
-    // 4. Ejecutar todas las actualizaciones en paralelo
-    forkJoin([...actualizacionesInsumos, actualizacionProducto]).subscribe({
-      next: (results) => {
-        console.log('✅ Producción registrada exitosamente', results);
-        this.produccionEnProceso = false;
+    try {
+      // 1. Calcular los nuevos stocks para cada insumo
+      const actualizacionesInsumos = this.recetaSeleccionada.insumos.map(insumoReceta => {
+        const cantidadTotalRequerida = insumoReceta.cantidad * this.cantidadProducir;
+        const nuevoStock = this.getStockActual(insumoReceta.insumo_id) - cantidadTotalRequerida;
         
-        // Mostrar resumen de la producción
-        alert(`✅ Producción exitosa!\n\n` +
-              `Producto: ${this.recetaSeleccionada?.nombre_producto}\n` +
-              `Cantidad producida: ${this.cantidadProducir} lotes\n` +
-              `Total producido: ${cantidadProducidaTotal} ${this.recetaSeleccionada?.unidad_rendimiento}\n\n` +
-              `Los insumos han sido descontados del inventario.`);
+        console.log(`📦 Actualizando insumo ${insumoReceta.insumo_id}: ${this.getStockActual(insumoReceta.insumo_id)} - ${cantidadTotalRequerida} = ${nuevoStock}`);
+        
+        return this.insumoService.actualizarStockInsumo(
+          insumoReceta.insumo_id, 
+          nuevoStock
+        );
+      });
 
-        // Recargar datos actualizados
-        this.cargarInsumosReales();
-        this.cancelarProduccion();
-      },
-      error: (error) => {
-        console.error('❌ Error en la producción:', error);
-        this.produccionEnProceso = false;
-        alert('❌ Error al registrar la producción. Por favor, intenta nuevamente.');
+      // 2. Calcular la nueva cantidad del producto lácteo
+      const cantidadProducidaTotal = this.recetaSeleccionada.rendimiento * this.cantidadProducir;
+      
+      // 3. Obtener el stock actual del producto para SUMAR (no reemplazar)
+      const productos = await firstValueFrom(this.productoService.getProductos());
+      const productoActual = productos.find(p => p.id === this.recetaSeleccionada!.producto_id);
+      
+      const inventarioActual = productoActual?.totalInventario || 0;
+      const nuevoInventario = inventarioActual + cantidadProducidaTotal;
+
+      console.log(`📦 Actualizando producto ${this.recetaSeleccionada.producto_id}: ${inventarioActual} + ${cantidadProducidaTotal} = ${nuevoInventario}`);
+
+      // 4. Actualizar el inventario del producto lácteo
+      const actualizacionProducto = this.productoService.actualizarInventarioProducto(
+        this.recetaSeleccionada.producto_id,
+        nuevoInventario
+      );
+
+      // 5. Ejecutar todas las actualizaciones en paralelo
+      await firstValueFrom(
+        forkJoin([...actualizacionesInsumos, actualizacionProducto])
+      );
+
+      console.log('✅ Producción registrada exitosamente');
+
+      // 6. Mostrar resumen de la producción
+      alert(`✅ Producción exitosa!\n\n` +
+            `Producto: ${this.recetaSeleccionada.nombre_producto}\n` +
+            `Cantidad producida: ${this.cantidadProducir} lotes\n` +
+            `Total producido: ${cantidadProducidaTotal} ${this.recetaSeleccionada.unidad_rendimiento}\n\n` +
+            `Los insumos han sido descontados del inventario.`);
+
+      // 7. Recargar datos actualizados y limpiar UI
+      await this.recargarDatosDespuesProduccion();
+
+    } catch (error: any) {
+      console.error('❌ Error en la producción:', error);
+      
+      let mensajeError = 'Error al registrar la producción.';
+      
+      if (error.status === 405) {
+        mensajeError += '\n\n⚠️ Error 405: Método no permitido.';
+      } else if (error.status === 404) {
+        mensajeError += '\n\n⚠️ Error 404: Endpoint no encontrado.';
+      } else {
+        mensajeError += `\n\nDetalles: ${error.message}`;
       }
-    });
+      
+      alert(mensajeError);
+    } finally {
+      // 8. SIEMPRE limpiar el estado de carga
+      this.produccionEnProceso = false;
+    }
+  }
+
+  // ✅ NUEVO MÉTODO: Recargar datos después de producción
+  async recargarDatosDespuesProduccion(): Promise<void> {
+    try {
+      // Recargar insumos para obtener datos actualizados
+      await firstValueFrom(this.insumoService.getInsumos()).then(insumos => {
+        this.insumosReales = insumos;
+        console.log('📦 Insumos actualizados después de producción:', this.insumosReales.length);
+      });
+
+      // Limpiar la selección actual
+      this.recetaSeleccionada = null;
+      this.insumosEnriquecidos = [];
+      this.cantidadProducir = 1;
+      
+      console.log('🔄 Producción completada y UI limpiada');
+      
+    } catch (error) {
+      console.error('❌ Error recargando datos después de producción:', error);
+      // Aún así limpiamos la UI
+      this.recetaSeleccionada = null;
+      this.insumosEnriquecidos = [];
+      this.cantidadProducir = 1;
+    }
   }
 
   cancelarProduccion(): void {
-    this.recetaSeleccionada = null;
-    this.insumosEnriquecidos = [];
-    this.cantidadProducir = 1;
-    console.log('❌ Producción cancelada');
+    // Solo cancelar si no hay producción en proceso
+    if (!this.produccionEnProceso) {
+      this.recetaSeleccionada = null;
+      this.insumosEnriquecidos = [];
+      this.cantidadProducir = 1;
+      console.log('❌ Producción cancelada por el usuario');
+    } else {
+      console.log('⚠️ No se puede cancelar durante producción en proceso');
+    }
   }
 
   onCantidadChange(): void {

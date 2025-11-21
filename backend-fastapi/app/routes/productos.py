@@ -52,3 +52,111 @@ async def list_productos():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+# ✅ NUEVO ENDPOINT PARA ACTUALIZAR PRODUCTO
+@router.put("/{producto_id}")
+async def update_producto(producto_id: str, update_data: dict):
+    try:
+        if not ObjectId.is_valid(producto_id):
+            raise HTTPException(status_code=400, detail="ID inválido")
+        
+        database = get_database()
+        
+        # Verificar que el producto existe
+        producto = await database.productos_lacteos.find_one({"_id": ObjectId(producto_id)})
+        if producto is None:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+        # Campos permitidos para actualizar
+        allowed_fields = ["totalInventario", "precio", "desc_queso"]
+        update_fields = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No hay campos válidos para actualizar")
+        
+        # Actualizar en la base de datos
+        result = await database.productos_lacteos.update_one(
+            {"_id": ObjectId(producto_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No se pudo actualizar el producto")
+        
+        # Obtener el producto actualizado
+        producto_actualizado = await database.productos_lacteos.find_one({"_id": ObjectId(producto_id)})
+        
+        nombre_producto = producto_actualizado.get("desc_queso") or producto_actualizado.get("nombre", "Sin nombre")
+        
+        return {
+            "id": str(producto_actualizado["_id"]),
+            "desc_queso": nombre_producto,
+            "precio": producto_actualizado.get("precio", 0),
+            "totalInventario": producto_actualizado.get("totalInventario", 0)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+# ✅ ENDPOINT ESPECÍFICO PARA ACTUALIZAR INVENTARIO
+@router.patch("/{producto_id}/inventario")
+async def update_inventario_producto(producto_id: str, inventario_data: dict):
+    try:
+        if not ObjectId.is_valid(producto_id):
+            raise HTTPException(status_code=400, detail="ID inválido")
+        
+        database = get_database()
+        
+        # Verificar que el producto existe
+        producto = await database.productos_lacteos.find_one({"_id": ObjectId(producto_id)})
+        if producto is None:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+        # Actualizar inventario
+        cantidad = inventario_data.get("cantidad")
+        if cantidad is None:
+            raise HTTPException(status_code=400, detail="Se requiere cantidad")
+        
+        result = await database.productos_lacteos.update_one(
+            {"_id": ObjectId(producto_id)},
+            {"$set": {"totalInventario": cantidad}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="No se pudo actualizar el inventario")
+        
+        return {"message": "Inventario actualizado correctamente", "nuevo_inventario": cantidad}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+# ✅ ENDPOINT PARA OBTENER UN PRODUCTO POR ID
+@router.get("/{producto_id}")
+async def get_producto(producto_id: str):
+    try:
+        if not ObjectId.is_valid(producto_id):
+            raise HTTPException(status_code=400, detail="ID inválido")
+        
+        database = get_database()
+        producto = await database.productos_lacteos.find_one({"_id": ObjectId(producto_id)})
+        
+        if producto is None:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+        nombre_producto = producto.get("desc_queso") or producto.get("nombre", "Sin nombre")
+        
+        return {
+            "id": str(producto["_id"]),
+            "desc_queso": nombre_producto,
+            "precio": producto.get("precio", 0),
+            "totalInventario": producto.get("totalInventario", 0)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
