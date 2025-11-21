@@ -1,19 +1,22 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { Subscription, forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
+
+// Importa las interfaces desde los servicios
 import { Receta } from '../../models/receta.interface';
-import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal';
 import { RecetaService } from '../../services/receta';
 import { InsumoService, Insumo } from '../../services/insumo.service';
+import { ProductoService, ProductoLacteo } from '../../services/producto.service';
 
-// Interface para los insumos enriquecidos con datos reales
+// Importa el modal correctamente
+import { NuevaRecetaModal } from '../../components/nueva-receta-modal/nueva-receta-modal';
+
 interface InsumoRecetaEnriquecido {
   insumo_id: string;
   cantidad: number;
   unidad: string;
-  // Datos reales del insumo
   nombre_insumo?: string;
   stock_actual?: number;
   stock_minimo?: number;
@@ -25,8 +28,9 @@ interface InsumoRecetaEnriquecido {
   standalone: true,
   imports: [
     CommonModule, 
-    NuevaRecetaModal,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule,
+    NuevaRecetaModal // ✅ Ahora está correctamente importado
   ],
   templateUrl: './produccion.html',
   styleUrl: './produccion.scss',
@@ -41,15 +45,22 @@ export class Produccion implements OnInit, OnDestroy {
   error = '';
   insumosReales: Insumo[] = [];
   
+  cantidadProducir: number = 1;
+  produccionEnProceso: boolean = false;
+  
   private recetasSubscription: Subscription | undefined;
   private insumosSubscription: Subscription | undefined;
 
   constructor(
     private recetaService: RecetaService,
-    private insumoService: InsumoService
-  ) {}
+    private insumoService: InsumoService,
+    private productoService: ProductoService
+  ) {
+    console.log('✅ Produccion component initialized');
+  }
 
   ngOnInit() {
+    console.log('🔄 ngOnInit ejecutado');
     this.cargarRecetasReactivamente();
     this.cargarInsumosReales();
   }
@@ -67,11 +78,12 @@ export class Produccion implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
     
+    console.log('🔄 Cargando recetas...');
     this.recetasSubscription = this.recetaService.getRecetas().subscribe({
       next: (recetas) => {
+        console.log('📦 Recetas cargadas:', recetas);
         this.listaRecetas = recetas;
         this.loading = false;
-        console.log('📦 Recetas cargadas:', recetas.length);
       },
       error: (error) => {
         console.error('❌ Error cargando recetas:', error);
@@ -83,11 +95,11 @@ export class Produccion implements OnInit, OnDestroy {
   }
 
   cargarInsumosReales() {
-    this.insumoService.getInsumos().subscribe({
+    console.log('🔄 Cargando insumos...');
+    this.insumosSubscription = this.insumoService.getInsumos().subscribe({
       next: (insumos) => {
+        console.log('📦 Insumos cargados:', insumos);
         this.insumosReales = insumos;
-        console.log('📦 Insumos cargados:', this.insumosReales.length);
-        // Si ya hay una receta seleccionada, actualizar los insumos enriquecidos
         if (this.recetaSeleccionada) {
           this.enriquecerInsumosReceta();
         }
@@ -99,7 +111,6 @@ export class Produccion implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO MÉTODO: Enriquecer los insumos de la receta con datos reales
   enriquecerInsumosReceta() {
     if (!this.recetaSeleccionada) return;
     
@@ -118,30 +129,20 @@ export class Produccion implements OnInit, OnDestroy {
     console.log('🔍 Insumos enriquecidos:', this.insumosEnriquecidos);
   }
 
-  // ✅ Obtener información completa de un insumo por ID
   getInsumoInfo(insumoId: string): Insumo | null {
     return this.insumosReales.find(i => i.id === insumoId) || null;
   }
 
-  // ✅ Obtener stock actual de un insumo
   getStockActual(insumoId: string): number {
     const insumo = this.getInsumoInfo(insumoId);
     return insumo ? insumo.stock_actual : 0;
   }
 
-  // ✅ Obtener unidad del insumo
   getUnidadInsumo(insumoId: string): string {
     const insumo = this.getInsumoInfo(insumoId);
     return insumo ? insumo.unidad : '';
   }
 
-  // ✅ Obtener nombre del insumo
-  getNombreInsumo(insumoId: string): string {
-    const insumo = this.getInsumoInfo(insumoId);
-    return insumo ? insumo.nombre_insumo : 'Insumo no encontrado';
-  }
-
-  // ✅ Determinar estado del insumo
   getStatusText(insumoId: string): string {
     const insumo = this.getInsumoInfo(insumoId);
     if (!insumo) return 'No encontrado';
@@ -154,14 +155,12 @@ export class Produccion implements OnInit, OnDestroy {
     return 'Ok';
   }
 
-  // ✅ Obtener cantidad requerida de la receta
   getCantidadRequerida(insumoId: string): number {
     if (!this.recetaSeleccionada) return 0;
     const insumoReceta = this.recetaSeleccionada.insumos.find(i => i.insumo_id === insumoId);
     return insumoReceta ? insumoReceta.cantidad : 0;
   }
 
-  // ✅ Obtener clase CSS para el estado
   getStatusClass(insumoId: string): any {
     const status = this.getStatusText(insumoId);
     return {
@@ -172,22 +171,30 @@ export class Produccion implements OnInit, OnDestroy {
     };
   }
 
-  // ✅ Verificar si todos los insumos tienen stock suficiente
   getProduccionPosible(): boolean {
-    if (!this.recetaSeleccionada) return false;
+    if (!this.recetaSeleccionada || this.cantidadProducir <= 0) return false;
     
     return this.recetaSeleccionada.insumos.every(insumo => {
       const stockActual = this.getStockActual(insumo.insumo_id);
-      return stockActual >= insumo.cantidad;
+      const cantidadTotalRequerida = insumo.cantidad * this.cantidadProducir;
+      return stockActual >= cantidadTotalRequerida;
     });
   }
 
+  getCantidadTotalRequerida(insumoId: string): number {
+    if (!this.recetaSeleccionada) return 0;
+    const insumoReceta = this.recetaSeleccionada.insumos.find(i => i.insumo_id === insumoId);
+    return insumoReceta ? insumoReceta.cantidad * this.cantidadProducir : 0;
+  }
+
   onRecetaCreada() {
-    console.log('📢 Receta creada - la lista se actualizará automáticamente');
+    console.log('📢 Receta creada - recargando lista...');
+    this.cargarRecetasReactivamente(); // Recarga las recetas cuando se crea una nueva
   }
 
   seleccionarReceta(receta: Receta): void {
     this.recetaSeleccionada = receta;
+    this.cantidadProducir = 1;
     this.enriquecerInsumosReceta();
     console.log('🎯 Receta seleccionada:', receta.nombre_producto);
   }
@@ -216,32 +223,94 @@ export class Produccion implements OnInit, OnDestroy {
       if (!nuevoEstado && this.recetaSeleccionada?.id === id) {
         this.recetaSeleccionada = null;
         this.insumosEnriquecidos = [];
+        this.cantidadProducir = 1;
       }
     }
   }
 
   recargarManual() {
-    console.log('🔄 Recarga manual de recetas');
+    console.log('🔄 Recarga manual');
     this.cargarRecetasReactivamente();
   }
 
-  // ✅ MÉTODO PARA CONFIRMAR PRODUCCIÓN
   confirmarProduccion(): void {
-    if (!this.recetaSeleccionada) return;
-    
-    if (!this.getProduccionPosible()) {
+    if (!this.recetaSeleccionada || !this.getProduccionPosible()) {
       alert('❌ No hay suficiente stock para realizar la producción');
       return;
     }
+
+    if (this.cantidadProducir <= 0) {
+      alert('❌ La cantidad a producir debe ser mayor a 0');
+      return;
+    }
+
+    this.produccionEnProceso = true;
+
+    // 1. Calcular los nuevos stocks para cada insumo
+    const actualizacionesInsumos = this.recetaSeleccionada.insumos.map(insumoReceta => {
+      const cantidadTotalRequerida = insumoReceta.cantidad * this.cantidadProducir;
+      const nuevoStock = this.getStockActual(insumoReceta.insumo_id) - cantidadTotalRequerida;
+      
+      return this.insumoService.actualizarStockInsumo(
+        insumoReceta.insumo_id, 
+        nuevoStock
+      );
+    });
+
+    // 2. Calcular la nueva cantidad del producto lácteo
+    const cantidadProducidaTotal = this.recetaSeleccionada.rendimiento * this.cantidadProducir;
     
-    // Aquí iría la lógica para registrar la producción
-    console.log('✅ Confirmando producción de:', this.recetaSeleccionada.nombre_producto);
-    alert(`✅ Producción de ${this.recetaSeleccionada.nombre_producto} confirmada`);
+    // 3. Actualizar el inventario del producto lácteo
+    const actualizacionProducto = this.productoService.actualizarInventarioProducto(
+      this.recetaSeleccionada.producto_id,
+      cantidadProducidaTotal
+    );
+
+    // 4. Ejecutar todas las actualizaciones en paralelo
+    forkJoin([...actualizacionesInsumos, actualizacionProducto]).subscribe({
+      next: (results) => {
+        console.log('✅ Producción registrada exitosamente', results);
+        this.produccionEnProceso = false;
+        
+        // Mostrar resumen de la producción
+        alert(`✅ Producción exitosa!\n\n` +
+              `Producto: ${this.recetaSeleccionada?.nombre_producto}\n` +
+              `Cantidad producida: ${this.cantidadProducir} lotes\n` +
+              `Total producido: ${cantidadProducidaTotal} ${this.recetaSeleccionada?.unidad_rendimiento}\n\n` +
+              `Los insumos han sido descontados del inventario.`);
+
+        // Recargar datos actualizados
+        this.cargarInsumosReales();
+        this.cancelarProduccion();
+      },
+      error: (error) => {
+        console.error('❌ Error en la producción:', error);
+        this.produccionEnProceso = false;
+        alert('❌ Error al registrar la producción. Por favor, intenta nuevamente.');
+      }
+    });
   }
 
   cancelarProduccion(): void {
     this.recetaSeleccionada = null;
     this.insumosEnriquecidos = [];
+    this.cantidadProducir = 1;
     console.log('❌ Producción cancelada');
+  }
+
+  onCantidadChange(): void {
+    if (this.cantidadProducir < 1) {
+      this.cantidadProducir = 1;
+    }
+  }
+
+  incrementarCantidad(): void {
+    this.cantidadProducir++;
+  }
+
+  decrementarCantidad(): void {
+    if (this.cantidadProducir > 1) {
+      this.cantidadProducir--;
+    }
   }
 }

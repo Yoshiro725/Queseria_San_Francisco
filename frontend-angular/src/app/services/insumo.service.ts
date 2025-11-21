@@ -29,4 +29,8 @@ export class InsumoService {
   getInsumoById(id: string): Observable<Insumo> {
     return this.http.get<Insumo>(`${this.apiUrl}/${id}`);
   }
+  // En insumo.service.ts
+actualizarStockInsumo(insumoId: string, nuevoStock: number): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/${insumoId}`, { stock_actual: nuevoStock });
+}
 }

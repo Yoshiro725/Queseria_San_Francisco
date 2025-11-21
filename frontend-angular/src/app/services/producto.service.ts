@@ -26,4 +26,10 @@ export class ProductoService {
   getProductos(): Observable<ProductoLacteo[]> {
     return this.http.get<ProductoLacteo[]>(this.apiUrl);
   }
+  // En producto.service.ts
+actualizarInventarioProducto(productoId: string, cantidadProducida: number): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/${productoId}/inventario`, { 
+    cantidad: cantidadProducida 
+  });
+}
 }
