@@ -1,14 +1,33 @@
 <div class="flex flex-col space-y-6">
+  <!-- Mensaje de carga -->
+  <div *ngIf="cargando" class="bg-blue-100 border border-blue-400 text-blue-700 p-4 rounded flex items-center">
+    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-3"></div>
+    ⏳ Cargando ventas...
+  </div>
 
-  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 p-4 rounded">
+    ❌ {{ error }}
+    <button (click)="recargarManual()" class="ml-2 text-blue-600 underline text-sm">
+      Reintentar
+    </button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!cargando" class="bg-white rounded-lg shadow-md overflow-hidden">
     
     <div class="bg-yellow-300 p-4 flex justify-between items-center">
       <h2 class="text-2xl font-bold text-gray-800">REGISTRO DE VENTAS</h2>
-      <!-- Botón para abrir el modal de nueva venta -->
-      <button (click)="abrirModalNuevaVenta()"
-              class="text-sm font-semibold text-gray-700 hover:text-black">
-        + Nueva Venta
-      </button>
+      <div class="flex space-x-2">
+        <button (click)="recargarManual()"
+                class="text-sm font-semibold bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
+          🔄 Actualizar
+        </button>
+        <button (click)="abrirModalNuevaVenta()"
+                class="text-sm font-semibold bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+          + Nueva Venta
+        </button>
+      </div>
     </div>
 
     <!-- Sección de Filtros -->
@@ -22,14 +41,14 @@
         <input type="date" [(ngModel)]="filtroFechaHasta" class="mt-1 w-full p-2 border rounded-md shadow-sm">
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600">Nombre del Cliente</label>
+        <label class="block text-xs font-medium text-gray-600">Cliente</label>
         <input type="text" [(ngModel)]="filtroCliente" placeholder="Buscar cliente..." class="mt-1 w-full p-2 border rounded-md shadow-sm">
       </div>
       <div class="flex items-end space-x-2">
         <button (click)="aplicarFiltros()" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600">
           Filtrar
         </button>
-        <button (click)="limpiarFiltros()" title="Limpiar filtros" class="p-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+        <button (click)="limpiarFiltros()" class="p-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -52,32 +71,45 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              <tr *ngFor="let venta of ventasFiltradas" class="hover:bg-gray-50" [class.bg-blue-100]="venta === ventaSeleccionada">
-                <td class="py-2 px-4">{{ venta.fecha }}</td>
-                <td class="py-2 px-4">{{ venta.cliente }}</td>
-                <td class="py-2 px-4 text-right font-medium">{{ venta.total | currency }}</td>
+              <tr *ngFor="let venta of ventasFiltradas" 
+                  class="hover:bg-gray-50" 
+                  [class.bg-blue-100]="venta === ventaSeleccionada">
+                <td class="py-2 px-4 text-sm">{{ venta.fecha }}</td>
+                <td class="py-2 px-4 text-sm">{{ venta.cliente }}</td>
+                <td class="py-2 px-4 text-sm text-right font-medium">{{ formatearMoneda(venta.total) }}</td>
                 <td class="py-2 px-4 text-center">
-                  <button (click)="seleccionarVenta(venta)" class="text-blue-600 hover:text-blue-800 font-semibold text-sm">
-                    Seleccionar
+                  <button (click)="seleccionarVenta(venta)" 
+                          class="text-blue-600 hover:text-blue-800 font-semibold text-sm">
+                    {{ venta === ventaSeleccionada ? 'Ocultar' : 'Ver Detalles' }}
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div *ngIf="ventasFiltradas.length === 0" class="text-center py-8 text-gray-500">
+          <p>No hay ventas que coincidan con los filtros aplicados</p>
+        </div>
       </div>
 
       <!-- Columna de Detalles -->
       <div class="lg:col-span-1 bg-gray-50 p-4 rounded-lg shadow-inner">
         <h3 class="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Detalles de la Venta</h3>
-        <div *ngIf="ventaSeleccionada; else noSeleccionado" class="space-y-2">
-          <p><strong>Cliente:</strong> {{ ventaSeleccionada.cliente }}</p>
-          <p><strong>Fecha:</strong> {{ ventaSeleccionada.fecha }}</p>
-          <p><strong>Total:</strong> {{ ventaSeleccionada.total | currency }}</p>
+        <div *ngIf="ventaSeleccionada; else noSeleccionado" class="space-y-3">
+          <div><strong>Cliente:</strong> {{ ventaSeleccionada.cliente }}</div>
+          <div><strong>Fecha:</strong> {{ ventaSeleccionada.fecha }}</div>
+          <div><strong>Total:</strong> {{ formatearMoneda(ventaSeleccionada.total) }}</div>
+          <div><strong>IVA:</strong> {{ formatearMoneda(ventaSeleccionada.IVA) }}</div>
+          
           <h4 class="font-bold mt-3 border-t pt-2">Productos:</h4>
-          <ul class="list-disc list-inside text-sm space-y-1">
-            <li *ngFor="let producto of ventaSeleccionada.productos">
-              {{ producto.cantidad }}x {{ producto.nombre }} - {{ producto.precio | currency }} c/u
+          <ul class="space-y-2">
+            <li *ngFor="let producto of ventaSeleccionada.productos" class="text-sm bg-white p-2 rounded border">
+              <div class="font-medium">{{ producto.nombre_producto || 'Producto' }}</div>
+              <div class="flex justify-between text-xs text-gray-600">
+                <span>{{ producto.cantidad }} x {{ formatearMoneda(producto.precioVenta) }}</span>
+                <span class="font-semibold">{{ formatearMoneda(producto.cantidad * producto.precioVenta) }}</span>
+              </div>
             </li>
           </ul>
         </div>
@@ -87,16 +119,18 @@
       </div>
     </div>
 
-    <div class="flex justify-end p-4 border-t bg-gray-50">
+    <div class="flex justify-between items-center p-4 border-t bg-gray-50">
+      <span class="text-sm text-gray-600">
+        Mostrando {{ ventasFiltradas.length }} de {{ listaVentas.length }} ventas
+      </span>
       <span class="text-xl font-bold text-gray-800">
-        Total Filtrado: {{ totalVentas | currency }}
+        Total Filtrado: {{ formatearMoneda(totalVentas) }}
       </span>
     </div>
   </div>
-
 </div>
 
-<!-- Componente del modal que se mostrará condicionalmente -->
+<!-- Modal de nueva venta -->
 <app-nueva-venta-modal
   *ngIf="isVentaModalOpen"
   (cerrar)="cerrarModalNuevaVenta()"

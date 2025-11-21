@@ -13,6 +13,7 @@ from app.models.cliente import Cliente
 from app.models.recetas import Receta
 from app.models.productos_lacteos import ProductoLacteo
 from app.models.insumos import Insumo
+from app.models.ventas import Venta, VentaResponse, DetalleVenta
 
 async def init_db():
     global client, database
@@ -28,7 +29,8 @@ async def init_db():
             Cliente,
             Receta,
             ProductoLacteo, 
-            Insumo
+            Insumo,
+            Venta
         ],
     )
 

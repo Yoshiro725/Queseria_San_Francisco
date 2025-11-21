@@ -16,6 +16,7 @@ export interface Insumo {
 })
 export class InsumoService {
   private apiUrl = 'http://localhost:8000/insumos';
+  
 
   constructor(private http: HttpClient) {}
 

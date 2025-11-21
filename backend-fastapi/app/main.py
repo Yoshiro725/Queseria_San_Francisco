@@ -1,13 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.database import init_db
-from app.routes import productos
-from app.routes import insumos
 from app.routes import (
     cliente, proveedores, productos, producciones, categoria_insumo,
     ai, recetas, derivados, inventario_productos, ventas, precio_litro,
     movimiento_insumo, entrega_diaria, pagos_semanales, denominaciones,
-    distribucion_pagos, reporte_inventario, reporte_produccion, cuidades
+    distribucion_pagos, reporte_inventario, reporte_produccion, cuidades, insumos
 )
 
 app = FastAPI(title="Quesería San Francisco API")
@@ -31,7 +29,7 @@ async def start_db():
 async def root():
     return {"mensaje": "Quesería San Francisco funcionando 🚀"}
 
-# ✅ Registrar las rutas
+# ✅ Registrar las rutas (SIN DUPLICADOS)
 app.include_router(productos.router)
 app.include_router(insumos.router)
 app.include_router(cuidades.router)
@@ -39,7 +37,6 @@ app.include_router(proveedores.router)
 app.include_router(cliente.router)
 app.include_router(categoria_insumo.router)
 app.include_router(movimiento_insumo.router)
-app.include_router(productos.router)
 app.include_router(recetas.router)
 app.include_router(derivados.router)
 app.include_router(producciones.router)
