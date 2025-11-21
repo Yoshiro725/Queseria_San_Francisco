@@ -102,12 +102,18 @@
       </div>
       
       <!-- Mostrar insumos de la receta seleccionada -->
-      <div *ngIf="recetaSeleccionada && recetaSeleccionada.insumos.length > 0" 
+      <div *ngIf="recetaSeleccionada && insumosEnriquecidos.length > 0" 
            class="mt-4 bg-blue-50 p-4 rounded-lg">
         <h4 class="font-bold text-gray-700 mb-2">Insumos de la receta "{{ recetaSeleccionada.nombre_producto }}":</h4>
-        <div *ngFor="let insumo of recetaSeleccionada.insumos" class="text-sm text-gray-600 mb-1">
+        <div *ngFor="let insumo of insumosEnriquecidos" class="text-sm text-gray-600 mb-1">
           • {{ insumo.nombre_insumo }}: {{ insumo.cantidad }} {{ insumo.unidad }}
         </div>
+      </div>
+
+      <!-- Indicador de estado de producción -->
+      <div *ngIf="recetaSeleccionada" class="mt-4 p-3 rounded-lg text-center font-bold"
+           [class]="getProduccionPosible() ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+        {{ getProduccionPosible() ? '✅ Producción posible' : '❌ Stock insuficiente para producción' }}
       </div>
       
       <div class="grid grid-cols-4 gap-4 font-bold text-gray-700 border-b pb-2 mb-3 mt-4">
@@ -118,10 +124,9 @@
       </div>
 
       <div class="space-y-3 max-h-60 overflow-y-auto pr-2"> 
-        <!-- Mostrar insumos REALES de la receta seleccionada -->
-        <div *ngIf="recetaSeleccionada && recetaSeleccionada.insumos.length > 0; else noRecetaSeleccionada">
+        <div *ngIf="recetaSeleccionada && insumosEnriquecidos.length > 0; else noRecetaSeleccionada">
           
-          <div *ngFor="let insumo of recetaSeleccionada.insumos" 
+          <div *ngFor="let insumo of insumosEnriquecidos" 
                class="grid grid-cols-4 gap-4 items-center bg-gray-100 rounded-lg p-3 shadow-sm">
             
             <!-- Columna 1: Nombre del Insumo -->
@@ -134,12 +139,12 @@
               {{ insumo.cantidad }} {{ insumo.unidad }}
             </div>
             
-            <!-- Columna 3: Stock Actual (SOLO el número, sin colores) -->
+            <!-- Columna 3: Stock Actual -->
             <div class="text-center font-semibold text-blue-600">
-              {{ getStockActual(insumo.insumo_id) }} {{ getUnidadInsumo(insumo.insumo_id) }}
+              {{ insumo.stock_actual }} {{ getUnidadInsumo(insumo.insumo_id) }}
             </div>
             
-            <!-- Columna 4: Estado (aquí van los colores) -->
+            <!-- Columna 4: Estado -->
             <div class="text-center">
               <span class="px-3 py-1 text-xs font-bold rounded-full"
                     [ngClass]="getStatusClass(insumo.insumo_id)">
@@ -157,10 +162,16 @@
       </div>
       
       <div class="flex justify-center space-x-4 mt-8">
-        <button class="bg-green-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-green-500">
+        <button 
+          (click)="confirmarProduccion()"
+          [disabled]="!recetaSeleccionada || !getProduccionPosible()"
+          class="bg-green-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-green-500
+                 disabled:opacity-50 disabled:cursor-not-allowed">
           Confirmar Producción
         </button>
-        <button class="bg-red-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-red-500">
+        <button 
+          (click)="cancelarProduccion()"
+          class="bg-red-400 text-white font-bold py-3 px-8 rounded-full shadow hover:bg-red-500">
           Cancelar Producción
         </button>
       </div>
@@ -168,7 +179,7 @@
   </div>
 </div>
 
-<!-- ✅ MODAL ACTUALIZADO CON EL EVENTO recetaCreada -->
+<!-- Modal para nueva receta -->
 <app-nueva-receta-modal 
   *ngIf="isModalOpen" 
   (cerrar)="cerrarModalNuevaReceta()"
