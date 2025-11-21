@@ -7,14 +7,15 @@ export interface DetalleVenta {
   producto_id: string;
   cantidad: number;
   precioVenta: number;
-  nombre_producto?: string;
-  subtotal?: number;
+  nombre_producto: string;  // ✅ NUEVO CAMPO
+  subtotal: number;         // ✅ NUEVO CAMPO
 }
 
 export interface Venta {
-  id: string; // ✅ Solo 'id', sin '_id'
+  id: string;
   fecha_venta: string;
   cliente_id: string;
+  cliente_nombre: string;   // ✅ NUEVO CAMPO
   total: number;
   IVA: number;
   detalle: DetalleVenta[];
@@ -45,14 +46,7 @@ export class VentasService {
     this.http.get<Venta[]>(this.apiUrl).subscribe({
       next: (ventas) => {
         console.log('📦 Ventas cargadas:', ventas);
-        const ventasConSubtotales = ventas.map(venta => ({
-          ...venta,
-          detalle: venta.detalle.map(detalle => ({
-            ...detalle,
-            subtotal: detalle.cantidad * detalle.precioVenta
-          }))
-        }));
-        this.ventasSubject.next(ventasConSubtotales);
+        this.ventasSubject.next(ventas);
       },
       error: (error) => {
         console.error('❌ Error cargando ventas:', error);

@@ -74,9 +74,9 @@ export class Ventas implements OnInit, OnDestroy {
 
   private transformarVentas(ventas: Venta[]): VentaLocal[] {
     return ventas.map((venta: Venta) => ({
-      id: venta.id || '', // ✅ Solo usar 'id', ya no '_id'
+      id: venta.id,
       fecha: this.formatearFecha(venta.fecha_venta),
-      cliente: venta.cliente_id || 'Cliente no especificado',
+      cliente: venta.cliente_nombre, // ✅ USAR NOMBRE DEL CLIENTE
       total: venta.total || 0,
       IVA: venta.IVA || 0,
       productos: venta.detalle || []
